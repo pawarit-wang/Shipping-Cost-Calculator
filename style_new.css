@@ -1,0 +1,498 @@
+/* =========================================
+   Reset & Base Styles
+   ========================================= */
+body {
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans Thai", "Noto Sans", sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* =========================================
+   Layout: Dashboard
+   ========================================= */
+.container {
+    max-width: 96%;
+    margin: 20px auto;
+    background: transparent;
+    padding: 0 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    color: #1e293b;
+}
+
+/* --- GRID SYSTEM: แบ่งซ้ายขวา --- */
+.cards-vertical {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 15px;
+    align-items: start;
+}
+
+.cards-vertical>section:nth-child(1) {
+    grid-column: 1 / 2;
+}
+
+.cards-vertical>section:nth-child(2) {
+    grid-column: 2 / 3;
+}
+
+@media (max-width: 1024px) {
+    .cards-vertical {
+        grid-template-columns: 1fr;
+    }
+
+    .cards-vertical>section:nth-child(1),
+    .cards-vertical>section:nth-child(2) {
+        grid-column: auto;
+    }
+}
+
+/* =========================================
+   Card Styles
+   ========================================= */
+.card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    color: #0f172a;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 8px;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+input,
+select {
+    width: 100%;
+    height: 36px;
+    padding: 6px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+input[readonly] {
+    background-color: #f8fafc;
+    color: #64748b;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+/* =========================================
+   Grid Helpers
+   ========================================= */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.four-col {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    align-items: end;
+}
+
+.five-col {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    align-items: end;
+}
+
+.six-col {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    align-items: end;
+}
+
+.vendor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.5fr 1fr 0.6fr 1fr; 
+    gap: 10px;
+    align-items: end;
+}
+
+.weight-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    align-items: end;
+}
+
+.hstack {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.hstack>input,
+.hstack>select {
+    min-width: 0;
+}
+
+.dimension-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dimension-group input {
+    width: 100%;
+    flex: none;
+}
+
+/* Navbar */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 56px;
+    background: #0f172a;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-logo {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.nav-menu {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-menu li a {
+    color: #e2e8f0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.nav-menu li a:hover {
+    color: #38bdf8;
+}
+
+.lang-switch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 20px;
+}
+
+.lang-switch a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.lang-switch a:hover {
+    color: #fff;
+}
+
+.lang-switch a.active {
+    color: #38bdf8;
+    font-weight: 700;
+}
+
+/* =========================================
+   Table Styles (เพิ่มส่วนนี้สำหรับหน้า Table)
+   ========================================= */
+.table-wrapper {
+    overflow-x: auto;
+    margin-top: 20px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.data-table th,
+.data-table td {
+    border: 1px solid #cbd5e1;
+    padding: 12px 15px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.data-table thead th {
+    background-color: #f1f5f9;
+    /* สีเทาอ่อนแบบ Slate */
+    color: #1e293b;
+    /* สีตัวอักษรเข้ม */
+    font-weight: 600;
+}
+
+.data-table tbody tr:nth-child(even) td {
+    background-color: #f8fafc;
+    /* สลับสีแถว */
+}
+
+.data-table tbody tr:hover td {
+    background-color: #e0f2fe;
+    /* สีฟ้าอ่อนเมื่อเอาเมาส์ชี้ */
+}
+
+/* ช่องที่พิมพ์แก้ได้ */
+[contenteditable="true"] {
+    background: #fff;
+    cursor: text;
+}
+
+[contenteditable="true"]:focus {
+    outline: 2px solid #38bdf8;
+    background: #fff;
+}
+
+/* =========================================
+   Responsive
+   ========================================= */
+@media (max-width: 1200px) {
+    .five-col {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 800px) {
+    .five-col {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .six-col {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 500px) {
+    .five-col {
+        grid-template-columns: 1fr;
+    }
+
+    .six-col {
+        grid-template-columns: 1fr;
+    }
+
+    .three-col,
+    .two-col,
+    .weight-row {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-menu {
+        display: none;
+    }
+
+    /* ซ่อนเมนูบนมือถือถ้าต้องการ หรือปรับเป็น hamburger */
+}
+
+/* =========================================
+   Table Actions (Vendor Filter)
+   ========================================= */
+.table-actions {
+    display: flex;
+    justify-content: flex-end;
+    /* ชิดขวา */
+    align-items: center;
+    gap: 15px;
+    /* ระยะห่างระหว่าง Dropdown แต่ละตัว (ถ้ามีหลายตัว) */
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+/* กลุ่มก้อนของ Label + Select */
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* ระยะห่างระหว่างตัวหนังสือกับช่องเลือก */
+}
+
+.filter-group label {
+    margin-bottom: 0;
+    /* ลบ margin เดิมของ label ทั่วไป */
+    white-space: nowrap;
+}
+
+.filter-group select {
+    width: 200px;
+    cursor: pointer;
+}
+
+/* Responsive: มือถือ */
+@media (max-width: 600px) {
+    .table-actions {
+        flex-direction: column;
+        align-items: stretch;
+        /* ยืดเต็มจอ */
+        gap: 10px;
+    }
+
+    .filter-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .filter-group select {
+        width: 100%;
+        /* เต็มจอในมือถือ */
+    }
+}
+
+/* =========================================
+   Utility Classes
+   ========================================= */
+.hidden {
+    display: none !important;
+}
+
+/* เพิ่มใหม่: จำกัดความกว้างของ Container สำหรับหน้า Table */
+.container-narrow {
+    max-width: 1000px; /* ปรับตัวเลขนี้ได้ตามความกว้างที่ชอบ (เช่น 800px, 1200px) */
+}
+
+.search-link {
+    margin-left: 12px;       /* เว้นระยะห่างจากช่อง Input */
+    font-size: 0.9rem;       /* ขนาดตัวอักษร */
+    color: #2563eb;          /* สีน้ำเงิน (หรือเปลี่ยนสีตามชอบ) */
+    text-decoration: none;   /* ไม่ขีดเส้นใต้ (ปกติ) */
+    white-space: nowrap;     /* บังคับไม่ให้ตัดคำ */
+    cursor: pointer;
+}
+
+.search-link:hover {
+    text-decoration: underline; /* ขีดเส้นใต้เมื่อเอาเมาส์ชี้ */
+    color: #1d4ed8;             /* สีเข้มขึ้นตอนชี้ */
+}
+
+.action-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.btn-move {
+    background-color: #64748b;
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 0; /* ลบ padding เดิมของ button */
+}
+
+.btn-move:hover {
+    background-color: #475569;
+}
+
+.btn-move:disabled {
+    background-color: #cbd5e1;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ปรับปุ่มลบให้ขนาดเท่ากันเพื่อความสวยงาม */
+.btn-delete {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* สไตล์สำหรับ Drag & Drop */
+.drag-handle {
+    cursor: grab;
+    font-size: 1.2rem;
+    color: #94a3b8;
+    margin-right: 8px;
+    user-select: none;
+    line-height: 1;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+    color: #475569;
+}
+
+/* เอฟเฟกต์ตอนกำลังลากแถว */
+tr.dragging {
+    opacity: 0.5;
+    background-color: #e2e8f0;
+}
+
+/* เอฟเฟกต์ตอนลากผ่าน (เป้าหมายที่จะวาง) */
+tr.drag-over {
+    border-bottom: 2px solid #2563eb; /* เส้นสีน้ำเงินแสดงตำแหน่งที่จะวาง */
+}
