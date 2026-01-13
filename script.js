@@ -651,7 +651,17 @@ function getRateFromStorage(vendor, val) {
 // SessionStorage: Form State (Modified)
 // =============================
 function saveFormState() {
-    const state = {};
+    // 1. อ่านข้อมูลเดิมที่มีอยู่ใน SessionStorage ออกมาก่อน
+    // เพื่อกันไม่ให้ข้อมูลของหน้าอื่น (เช่น Calculator) หายไปเมื่อเราอยู่หน้า Table
+    let state = {};
+    try {
+        const stored = sessionStorage.getItem(FORM_STATE_KEY);
+        if (stored) state = JSON.parse(stored);
+    } catch (e) {
+        state = {};
+    }
+
+    // 2. อัปเดต/บันทึกทับ เฉพาะ Input ที่มีอยู่ในหน้าปัจจุบัน
     document.querySelectorAll('input, select').forEach(el => {
         if (!el.id) return;
         if (el.type === 'checkbox' || el.type === 'radio') {
@@ -660,10 +670,10 @@ function saveFormState() {
             state[el.id] = el.value;
         }
     });
-    // Changed to sessionStorage for session-only persistence
+
+    // 3. บันทึกกลับลงไป
     sessionStorage.setItem(FORM_STATE_KEY, JSON.stringify(state));
 }
-
 function loadFormState() {
     // 1. Check if the page was reloaded
     const navEntry = performance.getEntriesByType("navigation")[0];
@@ -746,24 +756,35 @@ function updateTotalNetWeight() {
     const net = toNum(netWeightInput?.value);
     const qty = Math.max(1, toNum(weightQtyInput?.value) || 1);
     const totalNet = net * qty;
-    setIfElement(totalNetWeightInput, totalNet ? formatNum(totalNet, 3) : "");
-    return totalNet;
+
+    // [แก้ไข] เปลี่ยนตัวเลขด้านหลังเป็น 1 (ทศนิยม 1 ตำแหน่ง)
+    setIfElement(totalNetWeightInput, totalNet ? formatNum(totalNet, 1) : "");
+
+    return totalNet; // ส่งค่ากลับเป็นตัวเลขจริง (3 ตำแหน่ง) เพื่อไปคำนวณต่อได้แม่นยำ
 }
 
 function updateVolumeFromWeight() {
     const totalKg = toNum(manualGrossWeightInput?.value) || toNum(totalWeightInput?.value);
     const vendor = vendorSelect?.value || "";
+    const divisor = toNum(volumetricDivisorInput?.value) || 500;
     let m3 = 0;
 
-    // [NEW LOGIC] Sea: Volume = Gross Weight / Manual Divisor
+    // Logic เดิมของ Sea (v01199)
     if (vendor === 'v01199') {
-        const divisor = toNum(volumetricDivisorInput?.value) || 500;
-        m3 = totalKg / divisor;
-        setIfElement(volumeFromWeightOutput, totalKg ? formatNum(m3, 3) : "");
+        if (divisor > 0) {
+            m3 = totalKg / divisor;
+        }
+    }
+    // Logic ใหม่: Auto convert
+    else {
+        m3 = (totalKg * divisor) / 1_000_000;
     }
 
-    // For other vendors, we DO NOT auto-update volume display (as per previous request)
+    // [แก้ไขตรงนี้] เปลี่ยนจาก formatNum(m3, 3) เป็น formatNum(m3, 1)
+    setIfElement(volumeFromWeightOutput, totalKg ? formatNum(m3, 1) : "");
 }
+
+// ค้นหา function updateWeightTotals() แล้วแก้ส่วนล่างของฟังก์ชันดังนี้ครับ
 
 function updateWeightTotals() {
     const totalNet = updateTotalNetWeight();
@@ -771,7 +792,8 @@ function updateWeightTotals() {
     const pkgQty = Math.max(1, toNum(packagingQtyInput?.value) || 1);
     const totalPkg = pkg * pkgQty;
 
-    setIfElement(totalPackagingWeightInput, totalPkg ? formatNum(totalPkg, 3) : "");
+    // [แก้ไข] เปลี่ยนตัวเลขด้านหลังเป็น 1 (ทศนิยม 1 ตำแหน่ง)
+    setIfElement(totalPackagingWeightInput, totalPkg ? formatNum(totalPkg, 1) : "");
 
     const radioInclude = document.getElementById("box-include");
     const isIncludeBox = radioInclude && radioInclude.checked;
@@ -780,9 +802,12 @@ function updateWeightTotals() {
     if (isIncludeBox) grandTotal = totalNet;
     else grandTotal = totalNet + totalPkg;
 
-    setIfElement(totalWeightInput, grandTotal ? formatNum(grandTotal, 3) : "");
+    // ส่วน Gross Weight ยังคง 1 ตำแหน่งตามเดิม
+    if (grandTotal > 0) {
+        grandTotal = Math.ceil(grandTotal * 2) / 2;
+    }
+    setIfElement(totalWeightInput, grandTotal ? formatNum(grandTotal, 1) : "");
 
-    // Trigger logic for Sea
     updateVolumeFromWeight();
 }
 
@@ -831,22 +856,20 @@ function updateVolumes() {
     // m3
     const grossM3 = grossCm3 / 1_000_000;
 
-    setIfElement(grossVolumeInput, grossCm3 ? formatNum(grossM3, 3) : ""); // บรรทัดนี้คงไว้ 3 ตามเดิม (Gross Dimensions m3)
+    setIfElement(grossVolumeInput, grossCm3 ? formatNum(grossM3, 3) : "");
 
     const qty = Math.max(1, toNum(dimensionQtyInput?.value) || 1);
     let totalM3 = grossM3 * qty;
 
-    // [MODIFIED] Round up to nearest 0.5
+    // Round up to nearest 0.5
     if (totalM3 > 0) {
         totalM3 = Math.ceil(totalM3 * 2) / 2;
     }
 
-    // แก้ไขตรงนี้: เปลี่ยนเลข 3 เป็น 1
-    // จากเดิม: setIfElement(totalVolumeInput, totalM3 ? formatNum(totalM3, 3) : "");
     setIfElement(totalVolumeInput, totalM3 ? formatNum(totalM3, 1) : "");
 
-    // [ลบหรือ Comment บรรทัดนี้ออก] เพื่อไม่ให้คำนวณ Auto
-    // updateGrandVolumeDisplay(); 
+    // [แก้ไข] เอา Comment ออก เพื่อให้คำนวณ Auto ทันทีที่ Dimension เปลี่ยน
+    updateGrandVolumeDisplay();
 }
 
 function calculateShipping() {
@@ -973,6 +996,13 @@ volumetricMultiplierInput?.addEventListener("input", () => {
     calculateShipping();
 });
 
+// เพื่อให้เมื่อแก้ Divisor แล้ว Volume และ Grand Volume เปลี่ยนทันที
+volumetricDivisorInput?.addEventListener("input", () => {
+    updateVolumeFromWeight();      // คำนวณ Volume (m3) ใหม่
+    updateGrandVolumeDisplay();    // คำนวณ Grand Volume (kg) ใหม่
+    calculateShipping();           // คำนวณราคาใหม่
+});
+
 vendorSelect?.addEventListener("change", () => {
     updateVolumeFromWeight();
 
@@ -995,16 +1025,16 @@ destinationCountrySelect?.addEventListener("change", () => {
 historyClearBtn?.addEventListener("click", clearHistory);
 
 // Manual Convert Button (General Case)
-document.getElementById("btn-convert-vol")?.addEventListener("click", function () {
-    const totalKg = toNum(manualGrossWeightInput?.value) || toNum(totalWeightInput?.value);
-    const m3 = (totalKg * VOLUMETRIC_DIVISOR) / 1_000_000;
-    setIfElement(volumeFromWeightOutput, totalKg ? formatNum(m3, 3) : "");
-});
+// document.getElementById("btn-convert-vol")?.addEventListener("click", function () {
+//     const totalKg = toNum(manualGrossWeightInput?.value) || toNum(totalWeightInput?.value);
+//     const m3 = (totalKg * VOLUMETRIC_DIVISOR) / 1_000_000;
+//     setIfElement(volumeFromWeightOutput, totalKg ? formatNum(m3, 3) : "");
+// });
 
-document.getElementById("btn-convert-dim")?.addEventListener("click", function () {
-    // [UPDATED] Use centralized function logic
-    updateGrandVolumeDisplay();
-});
+// document.getElementById("btn-convert-dim")?.addEventListener("click", function () {
+//     // [UPDATED] Use centralized function logic
+//     updateGrandVolumeDisplay();
+// });
 
 // Language Button Listeners
 if (btnEn) btnEn.addEventListener("click", (e) => { e.preventDefault(); setLanguage("en"); });
@@ -1022,7 +1052,7 @@ if (tableVendorSelect) {
 
 // Input Focus Logic
 const allInputs = document.querySelectorAll('input[type="text"], input[type="number"]');
-const textFields = ["goods-name", "part-number", "hs-code"]; // Fields to exclude from number formatting
+const textFields = ["goods-name", "part-number"]; // Fields to exclude from number formatting
 
 allInputs.forEach(el => {
     el.addEventListener("focus", function () {
@@ -1032,24 +1062,33 @@ allInputs.forEach(el => {
         this.select();
     });
 
+    // ค้นหา Event Listener ของ blur ในช่วงท้ายไฟล์ แล้วแทนที่ด้วยโค้ดชุดนี้ครับ
+
+    // ค้นหาและแทนที่ Logic ภายใน blur event ด้วยโค้ดนี้ครับ
+
     el.addEventListener("blur", function () {
         if (this.value && !this.readOnly && !textFields.includes(this.id)) {
             const v = toNum(this.value);
 
-            // [เพิ่ม] ตรวจสอบว่าเป็นช่อง Dimension หรือไม่ (width, length, height)
+            // 1. กลุ่ม 0 ตำแหน่ง (Dimensions)
             const isDim = this.id.includes("width") || this.id.includes("length") || this.id.includes("height");
 
-            // [แก้ไข] logic การเลือกทศนิยม
-            const isVol = this.id.includes("Volume") || this.id.includes("dimensions") || this.id.includes("gross-weight") || this.id.includes("net-weight") || this.id.includes("add-weight");
+            // 2. [แก้ไข] กลุ่ม 3 ตำแหน่ง (Volume, Gross Weight input, และเพิ่ม Net/Add Weight กลับเข้ามา)
+            const isThreeDecimal = this.id.includes("Volume") ||
+                this.id.includes("dimensions") ||
+                this.id.includes("gross-weight") ||
+                this.id === "net-weight" ||   // <--- เพิ่ม
+                this.id === "add-weight";     // <--- เพิ่ม
 
-            // ถ้าเป็น Dim ให้ใช้ 0, ถ้าไม่ใช่ดูว่าเป็น Vol ไหม (3), ถ้าไม่ใช่เลยใช้ 2
-            const decimals = isDim ? 0 : (isVol ? 3 : 2);
+            // กำหนดทศนิยม: ถ้าไม่ใช่ Dim และไม่ใช่กลุ่ม 3 ตำแหน่ง ให้เป็น 2 ตำแหน่ง (เช่น ราคา)
+            const decimals = isDim ? 0 : (isThreeDecimal ? 3 : 2);
 
-            // บังคับ 0 ทศนิยมสำหรับ Gross Volume (cm³) ด้วย
+            // บังคับ 0 ทศนิยมสำหรับ Gross Volume (cm³)
             if (this.id === "gross-volume") {
                 this.value = formatNum(v, 0);
             } else {
-                this.value = this.id.includes("qty") || this.id.includes("divisor") || this.id.includes("multiplier") ? formatNum(v, 0) : formatNum(v, decimals);
+                const isIntField = this.id.includes("qty") || this.id.includes("divisor") || this.id.includes("multiplier");
+                this.value = isIntField ? formatNum(v, 0) : formatNum(v, decimals);
             }
         }
     });
