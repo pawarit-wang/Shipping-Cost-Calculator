@@ -16,8 +16,11 @@
             cursor: pointer;
             font-size: 0.8rem;
         }
-        .btn-delete:hover { background-color: #dc2626; }
-        
+
+        .btn-delete:hover {
+            background-color: #dc2626;
+        }
+
         .btn-add {
             background-color: #22c55e;
             color: white;
@@ -30,13 +33,17 @@
             align-items: center;
             gap: 5px;
         }
-        .btn-add:hover { background-color: #16a34a; }
+
+        .btn-add:hover {
+            background-color: #16a34a;
+        }
 
         td.row-key {
             font-weight: bold;
             color: #334155;
             background-color: #f8fafc;
         }
+
         td.row-key:focus {
             background-color: #fff;
             outline: 2px solid #3b82f6;
@@ -57,7 +64,8 @@
             <li><a href="#" data-i18n="nav_history">History</a></li>
             <li class="lang-switch">
                 <a href="#" id="lang-en" class="active">EN</a> |
-                <a href="#" id="lang-th">TH</a>
+                <a href="#" id="lang-th">TH</a> |
+                <a href="#" id="lang-cn">CN</a>
             </li>
         </ul>
     </nav>
@@ -79,13 +87,15 @@
 
         <div class="table-wrapper">
 
-            <div id="table-placeholder" style="text-align: center; padding: 20px; color: #64748b;" data-i18n="msg_select_type">
+            <div id="table-placeholder" style="text-align: center; padding: 20px; color: #64748b;"
+                data-i18n="msg_select_type">
                 Please select a transport type to view rates.
             </div>
 
             <div id="view-air" class="hidden">
                 <h3 style="margin-bottom:10px;" data-i18n="header_air_table">Air Rates Table</h3>
-                <p style="font-size:0.8rem; color:#64748b; margin-bottom:10px;" data-i18n="msg_edit_step">* Edit the first column to change weight steps.</p>
+                <p style="font-size:0.8rem; color:#64748b; margin-bottom:10px;" data-i18n="msg_edit_step">* Edit the
+                    first column to change weight steps.</p>
                 <table class="data-table">
                     <thead>
                         <tr>

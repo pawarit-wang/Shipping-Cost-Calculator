@@ -8,6 +8,7 @@ const HISTORY_KEY = "shipping_calc_history_v1";
 const RATES_KEY = "shipping_calc_rates_v1";
 const ROW_CONFIG_KEY = "shipping_calc_rows_config_v1";
 const FORM_STATE_KEY = "shipping_calc_form_state_v1";
+const LANG_KEY = "shipping_calc_lang_v1";
 
 // ---------- Element Selectors (Calculator Page) ----------
 const netWeightInput = document.getElementById("net-weight");
@@ -51,6 +52,8 @@ const destinationCountrySelect = document.getElementById("destination-country");
 const vendorSelect = document.getElementById("vendor");
 const rateInput = document.getElementById("rate");
 
+const chargeableInput = document.getElementById("chargeable-weight");
+
 const resultBoxOrigin = document.getElementById("result-origin");
 const costLabelOrigin = document.querySelector('label[for="result-origin"]');
 
@@ -68,6 +71,7 @@ const historyClearBtn = document.getElementById("history-clear");
 
 const btnEn = document.getElementById("lang-en");
 const btnTh = document.getElementById("lang-th");
+const btnCn = document.getElementById("lang-cn");
 
 // ---------- Element Selectors (Table Page) ----------
 const tableVendorSelect = document.getElementById("vendor-select");
@@ -100,6 +104,7 @@ const translations = {
         lbl_part_number: "Part Number",
         lbl_hs_code: "HS Code",
         lbl_vendor: "Vendor",
+        lbl_chargeable: "Chargeable W./Vol.",
         lbl_cost_origin: "Shipping Cost (Origin)",
         lbl_cost_dest: "Shipping Cost (Destination)",
         lbl_shipping_cost: "Shipping Cost",
@@ -182,6 +187,7 @@ const translations = {
         lbl_part_number: "รหัสสินค้า",
         lbl_hs_code: "หมายเลขศุลกากร",
         lbl_vendor: "บริษัทขนส่ง",
+        lbl_chargeable: "นน./ปริมาตร ที่คิดเงิน",
         lbl_cost_origin: "ค่าขนส่ง (ต้นทาง)",
         lbl_cost_dest: "ค่าขนส่ง (ปลายทาง)",
         lbl_shipping_cost: "ค่าขนส่ง",
@@ -245,6 +251,89 @@ const translations = {
         col_price_yuan: "ราคา (หยวน)",
         col_action: "จัดการ",
         btn_add_row: "+ เพิ่มแถว"
+    },
+    cn: {
+        app_title_logo: "🚚 运费计算器",
+        nav_table: "表格",
+        nav_calc: "计算器",
+        nav_history: "历史记录",
+        app_title: "运费计算器",
+        header_general_shipping: "常规与运输信息",
+        subheader_general: "常规信息",
+        subheader_vendor: "供应商与运费",
+        header_weight_dims: "重量与尺寸",
+        header_weight: "重量",
+        header_dims: "尺寸",
+        lbl_origin: "原产国",
+        lbl_destination: "目的地国家",
+        lbl_goods_name: "商品名称",
+        lbl_part_number: "零件号",
+        lbl_hs_code: "HS 编码",
+        lbl_vendor: "供应商",
+        lbl_chargeable: "计费重量/体积",
+        lbl_cost_origin: "运费 (原产地)",
+        lbl_cost_dest: "运费 (目的地)",
+        lbl_shipping_cost: "运费",
+        lbl_price_per_piece: "单价 / 件",
+        lbl_fuel: "燃油费",
+        lbl_other: "其他费用",
+        lbl_rate: "汇率",
+        btn_calc: "计算运费",
+        btn_search: "搜索",
+        lbl_box_exclude: "不含箱",
+        lbl_box_include: "含箱",
+        lbl_net_weight: "净重 (kg)",
+        lbl_pack_weight: "包装重量 (kg)",
+        lbl_gross_weight: "毛重 (kg)",
+        lbl_total_weight: "总重量 (kg)",
+        lbl_volume_m3: "体积 (m³)",
+        lbl_net_dims: "净尺寸 (cm)",
+        lbl_pack_dims: "包装尺寸 (cm)",
+        lbl_gross_dims: "毛尺寸 (cm)",
+        lbl_gross_dims_cm3: "毛尺寸 (m³)",
+        lbl_grand_dims: "总尺寸 (m³)",
+        lbl_qty: "数量",
+        lbl_unit: "单位",
+        lbl_grand_vol_kg: "总体积重 (kg)",
+        lbl_multiplier: "乘数",
+        lbl_divisor: "除数",
+        ph_qty: "数量",
+        ph_width: "宽",
+        ph_length: "长",
+        ph_height: "高",
+        ph_total_net: "总净重",
+        ph_total_pkg: "总包装",
+        opt_select_country: "选择国家",
+        opt_select_vendor: "选择供应商",
+        opt_unit: "单位",
+        country_china: "中国 (China)",
+        country_usa: "美国 (USA)",
+        country_japan: "日本 (Japan)",
+        country_thailand: "泰国 (Thailand)",
+        country_germany: "德国 (Germany)",
+        unit_box: "箱",
+        unit_bottle: "瓶",
+        unit_pack: "包",
+        unit_carton: "纸箱",
+        unit_dozen: "打",
+        unit_piece: "件",
+        alert_vendor: "请先选择供应商！",
+        text_origin: "原产地",
+        text_dest: "目的地",
+        // Table Page
+        lbl_transport_type: "运输类型:",
+        opt_select_type: "选择运输类型",
+        msg_select_type: "请选择运输类型以查看费率。",
+        header_air_table: "空运费率表",
+        msg_edit_step: "* 编辑第一列以更改重量阶梯。",
+        header_sea_table: "海运费率表",
+        header_land_table: "陆运费率表",
+        col_kg_edit: "KG (编辑)",
+        col_vol_edit: "体积 m³ (编辑)",
+        col_range_edit: "范围 (编辑)",
+        col_price_yuan: "价格 (元)",
+        col_action: "操作",
+        btn_add_row: "+ 添加行"
     }
 };
 
@@ -716,10 +805,14 @@ function loadFormState() {
 // =============================
 function setLanguage(lang) {
     if (!translations[lang]) return;
+
+    localStorage.setItem(LANG_KEY, lang);
+
     currentLang = lang;
 
     if (btnEn) btnEn.classList.toggle('active', lang === 'en');
     if (btnTh) btnTh.classList.toggle('active', lang === 'th');
+    if (btnCn) btnCn.classList.toggle('active', lang === 'cn');
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -823,7 +916,7 @@ function updateGrossDimensions() {
     updateVolumes();
 }
 
-// [NEW FUNCTION] Logic for displaying Grand Volume (kg)
+// Logic for displaying Grand Volume (kg)
 function updateGrandVolumeDisplay() {
     const vendor = vendorSelect?.value || "";
     // Priority: Manual Input > Calculated Total Volume
@@ -843,7 +936,8 @@ function updateGrandVolumeDisplay() {
         }
     }
 
-    setIfElement(grandVolumeInput, grandKg ? formatNum(grandKg, 3) : "");
+    // [แก้ไขตรงนี้] เปลี่ยนเลข 3 เป็น 1
+    setIfElement(grandVolumeInput, grandKg ? formatNum(grandKg, 1) : "");
 }
 
 function updateVolumes() {
@@ -856,7 +950,7 @@ function updateVolumes() {
     // m3
     const grossM3 = grossCm3 / 1_000_000;
 
-    setIfElement(grossVolumeInput, grossCm3 ? formatNum(grossM3, 3) : "");
+    setIfElement(grossVolumeInput, grossCm3 ? formatNum(grossM3, 1) : "");
 
     const qty = Math.max(1, toNum(dimensionQtyInput?.value) || 1);
     let totalM3 = grossM3 * qty;
@@ -874,15 +968,27 @@ function updateVolumes() {
 
 function calculateShipping() {
     const vendor = vendorSelect?.value || "";
-    if (!vendor) return;
 
-    // 1. Get Weight (Common)
+    // ตัวแปรสำหรับเก็บค่าที่จะแสดงในช่อง Chargeable (ค่าที่ชนะการเปรียบเทียบ)
+    let finalChargeable = 0;
+
+    if (!vendor) {
+        // Clear ค่าถ้าไม่ได้เลือก Vendor
+        setIfElement(chargeableInput, "");
+        if (resultBoxOrigin) resultBoxOrigin.value = "";
+        if (resultBoxDest) resultBoxDest.value = "";
+        if (pricePerPieceInput) pricePerPieceInput.value = "";
+        if (fuelAmountInput) fuelAmountInput.value = "";
+        return;
+    }
+
+    // 1. Get Weight (Common) - น้ำหนักจริงจาก Gross Weight
     const weightVal = toNum(manualGrossWeightInput?.value) || toNum(totalWeightInput?.value);
 
     let baseCost = 0;
 
     // ==========================================
-    // Vendor Logic: v01199 (Sea) - NEW FORMULA
+    // Vendor Logic: v01199 (Sea)
     // ==========================================
     if (vendor === 'v01199') {
         // 1. Ensure Volume from Weight is updated
@@ -893,7 +999,11 @@ function calculateShipping() {
         const valVolWeight = toNum(volumeFromWeightOutput?.value); // Volume (m³)
         const valGrandDim = toNum(totalVolumeInput?.value);        // Grand Dimensions (m³)
 
+        // เปรียบเทียบหาค่าที่มากกว่า (m³)
         const x = Math.max(valVolWeight, valGrandDim);
+
+        // เก็บค่า x ไว้แสดงในช่อง Chargeable
+        finalChargeable = x;
 
         // 3. Get Constants a and b from Table
         // a = Price for 1 m3 (Key: "1.0")
@@ -904,12 +1014,8 @@ function calculateShipping() {
         const a = toNum(vRates["1.0"]);
         const b = toNum(vRates["other"]);
 
-        // 4. Calculate Base Cost: a(x-1) + a + b => ax + b
+        // 4. Calculate Base Cost: ax + b
         baseCost = (a * x) + b;
-
-        // Debug log (optional)
-        console.log(`v01199: x=${x}, a=${a}, b=${b}, Cost=${baseCost}`);
-
     }
     // ==========================================
     // Vendor Logic: Others (Air, Land, v01198)
@@ -933,28 +1039,51 @@ function calculateShipping() {
             if (divisor > 0) volKg = totalCm3 / divisor;
         }
 
+        // เปรียบเทียบหาค่าที่มากกว่า (kg) ระหว่าง Gross Weight กับ Volumetric Weight
         const chargeable = Math.max(weightVal, volKg);
+
+        // เก็บค่า chargeable ไว้แสดงในช่อง Chargeable
+        finalChargeable = chargeable;
 
         // 3. Lookup Rate
         const lookupValue = chargeable;
-        const customRate = getRateFromStorage(vendor, lookupValue);
+        // เปลี่ยนบรรทัดนี้เพื่อรองรับ Logic ใหม่
+        let customRate = getRateFromStorage(vendor, lookupValue);
+
+        // [เพิ่มใหม่] ตรวจสอบ Checkbox Special
+        // หากติ๊กถูก ให้พยายามหาราคาจาก Key "special" ในตาราง (รองรับ v01198 หรือ Vendor อื่นที่มีแถวชื่อ special)
+        if (isSpecialCheckbox && isSpecialCheckbox.checked) {
+            const rates = loadRates();
+            if (rates[vendor] && rates[vendor]["special"]) {
+                const specialPrice = toNum(rates[vendor]["special"]);
+                if (specialPrice > 0) {
+                    // ถ้าเจอราคา Special ให้ใช้ราคานั้นเป็นแบบต่อหน่วย (Price per Unit) ทันที
+                    customRate = { type: 'per_unit', price: specialPrice };
+                }
+            }
+        }
 
         if (customRate) {
             baseCost = (customRate.type === 'fixed') ? customRate.price : (lookupValue * customRate.price);
         } else {
-            // Fallbacks
-            if (vendor === "v01198") { // Land fallback
+            // Fallbacks กรณีไม่มี Rate ในตาราง
+            if (vendor === "v01198") { // Land fallback logic
                 let p = 10;
                 if (chargeable <= 10) p = 13;
                 else if (chargeable <= 45) p = 12;
                 else if (chargeable <= 100) p = 11;
                 baseCost = chargeable * p;
-            } else { // Air fallback
+            } else { // Air fallback logic
                 const mul = (vendor === 'dhl') ? 1.15 : (vendor === 'fedex') ? 1.1 : 1.0;
                 baseCost = chargeable * 50 * mul;
             }
         }
     }
+
+    // ==========================================
+    // Update Chargeable Display (แสดง 1 ตำแหน่ง)
+    // ==========================================
+    setIfElement(chargeableInput, formatNum(finalChargeable, 1));
 
     // ==========================================
     // Final Calculation (Common)
@@ -988,10 +1117,10 @@ dimInputs.forEach(el => el?.addEventListener("input", () => {
     calculateShipping();
 }));
 
-// [NEW] Listener for Multiplier Input
+// Listener for Multiplier Input
 volumetricMultiplierInput?.addEventListener("input", () => {
-    // [ลบหรือ Comment บรรทัดนี้ออก]
-    // updateGrandVolumeDisplay(); 
+    // [แก้ไข] เอา Comment ออก
+    updateGrandVolumeDisplay();
 
     calculateShipping();
 });
@@ -1006,8 +1135,8 @@ volumetricDivisorInput?.addEventListener("input", () => {
 vendorSelect?.addEventListener("change", () => {
     updateVolumeFromWeight();
 
-    // [ลบหรือ Comment บรรทัดนี้ออก]
-    // updateGrandVolumeDisplay(); 
+    // [แก้ไข] เอา Comment ออก เพื่อให้คำนวณ Grand Volume (kg) ใหม่ตามสูตรของ Vendor นั้นๆ
+    updateGrandVolumeDisplay();
 
     calculateShipping();
 });
@@ -1039,6 +1168,7 @@ historyClearBtn?.addEventListener("click", clearHistory);
 // Language Button Listeners
 if (btnEn) btnEn.addEventListener("click", (e) => { e.preventDefault(); setLanguage("en"); });
 if (btnTh) btnTh.addEventListener("click", (e) => { e.preventDefault(); setLanguage("th"); });
+if (btnCn) btnCn.addEventListener("click", (e) => { e.preventDefault(); setLanguage("cn"); });
 
 if (tableVendorSelect) {
     tableVendorSelect.addEventListener("change", function () {
@@ -1085,7 +1215,7 @@ allInputs.forEach(el => {
 
             // บังคับ 0 ทศนิยมสำหรับ Gross Volume (cm³)
             if (this.id === "gross-volume") {
-                this.value = formatNum(v, 0);
+                this.value = formatNum(v, 1);
             } else {
                 const isIntField = this.id.includes("qty") || this.id.includes("divisor") || this.id.includes("multiplier");
                 this.value = isIntField ? formatNum(v, 0) : formatNum(v, decimals);
@@ -1096,7 +1226,7 @@ allInputs.forEach(el => {
 
 // Init
 document.addEventListener("DOMContentLoaded", () => {
-    setLanguage("en");
+    setLanguage(localStorage.getItem(LANG_KEY) || "en");
     renderHistory();
     // [NEW] Load saved form state immediately (with Refresh check)
     loadFormState();

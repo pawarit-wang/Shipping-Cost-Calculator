@@ -21,7 +21,8 @@
             <li><a href="#" data-i18n="nav_history">History</a></li>
             <li class="lang-switch">
                 <a href="#" id="lang-en" class="active">EN</a> |
-                <a href="#" id="lang-th">TH</a>
+                <a href="#" id="lang-th">TH</a> |
+                <a href="#" id="lang-cn">CN</a>
             </li>
         </ul>
     </nav>
@@ -76,7 +77,7 @@
                             <div class="wcol">
                                 <label data-i18n="lbl_pack_weight">Packaging Weight (kg)</label>
                                 <div class="hstack">
-                                    <input type="text" id="add-weight" step="0.001" />
+                                    <input type="text" id="add-weight" step="0.00d1" />
                                     <input type="text" id="packaging-qty" placeholder="Qty" step="1"
                                         data-i18n="ph_qty" />
                                     <input type="text" id="total-packaging-weight" placeholder="" readonly
@@ -256,6 +257,13 @@
                                 <label for="is-special"
                                     style="margin: 0; cursor: pointer; font-size: 0.8rem; color: #d97706; white-space: nowrap;">Special</label>
                             </div>
+                        </div>
+
+                        <div>
+                            <label id="lbl-chargeable" data-i18n="lbl_chargeable"
+                                style="color: #0369a1;">Chargeable</label>
+                            <input type="text" id="chargeable-weight" readonly
+                                style="background-color: #f0f9ff; color: #0369a1; font-weight: bold;" />
                         </div>
 
                         <div>
