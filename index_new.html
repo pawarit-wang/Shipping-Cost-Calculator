@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shipping Cost Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style_new.css" />
 </head>
 
@@ -18,7 +19,7 @@
         <ul class="nav-menu">
             <li><a href="table_new.html" data-i18n="nav_table">Table</a></li>
             <li><a href="index_new.html" data-i18n="nav_calc">Calculator</a></li>
-            <li><a href="#" data-i18n="nav_history">History</a></li>
+            <li><a href="history.html" data-i18n="nav_history">History</a></li>
             <li class="lang-switch">
                 <a href="#" id="lang-en" class="active">EN</a> |
                 <a href="#" id="lang-th">TH</a> |
@@ -307,13 +308,20 @@
                     <!-- <div class="form-group">
                         <button type="button" id="calc-btn" data-i18n="btn_calc">Calculate Shipping Cost</button>
                     </div> -->
+                    
+                    <div class="form-group" style="margin-top: 20px;">
+                        <button type="button" onclick="saveCalculation()"
+                            style="background-color: #0f172a; color: white;" data-i18n="btn_save_history">
+                            Save to History
+                        </button>
+                    </div>
                 </section>
 
             </div>
         </form>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 
 </html>

@@ -1,10 +1,39 @@
 // =============================
-// Shipping Calculator Script (Updated: Reset on Refresh, Keep on Navigation)
+// Shipping Calculator Script (FULL RESTORED VERSION)
 // =============================
 
-// ---------- Config ----------
+// =============================
+// 1. Firebase Configuration & Imports
+// =============================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    limit,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCSvGReWCatohjigRGVX3feyNB1d-zO8lg",
+    authDomain: "shipping-calculator-e37ad.firebaseapp.com",
+    projectId: "shipping-calculator-e37ad",
+    storageBucket: "shipping-calculator-e37ad.firebasestorage.app",
+    messagingSenderId: "408065703055",
+    appId: "1:408065703055:web:d1a524be0dcdd91849c4fa",
+    measurementId: "G-STV4L4D3HW"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getFirestore(app);
+
+// ---------- Config Constants ----------
 const VOLUMETRIC_DIVISOR = 500;
-const HISTORY_KEY = "shipping_calc_history_v1";
 const RATES_KEY = "shipping_calc_rates_v1";
 const ROW_CONFIG_KEY = "shipping_calc_rows_config_v1";
 const FORM_STATE_KEY = "shipping_calc_form_state_v1";
@@ -67,7 +96,6 @@ const otherInput = document.getElementById("other-charges");
 const isSpecialCheckbox = document.getElementById("is-special");
 
 const historyTableBody = document.getElementById("history-body");
-const historyClearBtn = document.getElementById("history-clear");
 
 const btnEn = document.getElementById("lang-en");
 const btnTh = document.getElementById("lang-th");
@@ -88,9 +116,7 @@ let currentLang = "en";
 const translations = {
     en: {
         app_title_logo: "🚚 Shipping Cost Calculator",
-        nav_table: "Table",
-        nav_calc: "Calculator",
-        nav_history: "History",
+        nav_table: "Table", nav_calc: "Calculator", nav_history: "History",
         app_title: "Shipping Cost Calculator",
         header_general_shipping: "General & Shipping Info",
         subheader_general: "General Information",
@@ -154,6 +180,8 @@ const translations = {
         alert_vendor: "Please select a Vendor first!",
         text_origin: "Origin",
         text_dest: "Destination",
+        btn_save_history: "Save to History",
+
         // Table Page
         lbl_transport_type: "Transport Type:",
         opt_select_type: "Select Transport Type",
@@ -167,13 +195,20 @@ const translations = {
         col_range_edit: "Range (Edit)",
         col_price_yuan: "Price (Yuan)",
         col_action: "Action",
-        btn_add_row: "+ Add Row"
+        btn_add_row: "+ Add Row",
+        // History Page
+        col_time: "Time / Date",
+        col_box_option: "Box Option",
+        col_qty: "Qty",
+        col_unit: "Unit",
+        col_net_weight: "Net W. (kg)",
+        col_net_dims: "Net Dims (cm)",
+        msg_loading: "Loading data from cloud...",
+        msg_no_history: "No history found."
     },
     th: {
         app_title_logo: "🚚 โปรแกรมคำนวณค่าขนส่ง",
-        nav_table: "ตาราง",
-        nav_calc: "คำนวณราคา",
-        nav_history: "ประวัติ",
+        nav_table: "ตาราง", nav_calc: "คำนวณราคา", nav_history: "ประวัติ",
         app_title: "โปรแกรมคำนวณค่าขนส่ง",
         header_general_shipping: "ข้อมูลทั่วไปและการจัดส่ง",
         subheader_general: "ข้อมูลทั่วไป",
@@ -237,6 +272,8 @@ const translations = {
         alert_vendor: "กรุณาเลือกบริษัทขนส่ง ก่อนคำนวณ!",
         text_origin: "ต้นทาง",
         text_dest: "ปลายทาง",
+        btn_save_history: "บันทึกประวัติ",
+
         // Table Page
         lbl_transport_type: "ประเภทการขนส่ง:",
         opt_select_type: "เลือกประเภทการขนส่ง",
@@ -250,13 +287,21 @@ const translations = {
         col_range_edit: "ช่วงน้ำหนัก (แก้ไขได้)",
         col_price_yuan: "ราคา (หยวน)",
         col_action: "จัดการ",
-        btn_add_row: "+ เพิ่มแถว"
+        btn_add_row: "+ เพิ่มแถว",
+
+        // History Page
+        col_time: "วัน / เวลา",
+        col_box_option: "ตัวเลือกกล่อง",
+        col_qty: "จำนวน",
+        col_unit: "หน่วย",
+        col_net_weight: "น้ำหนักสุทธิ (kg)",
+        col_net_dims: "ขนาดสุทธิ (cm)",
+        msg_loading: "กำลังโหลดข้อมูล...",
+        msg_no_history: "ไม่พบประวัติการคำนวณ"
     },
     cn: {
         app_title_logo: "🚚 运费计算器",
-        nav_table: "表格",
-        nav_calc: "计算器",
-        nav_history: "历史记录",
+        nav_table: "表格", nav_calc: "计算器", nav_history: "历史记录",
         app_title: "运费计算器",
         header_general_shipping: "常规与运输信息",
         subheader_general: "常规信息",
@@ -320,6 +365,8 @@ const translations = {
         alert_vendor: "请先选择供应商！",
         text_origin: "原产地",
         text_dest: "目的地",
+        btn_save_history: "保存到历史记录",
+
         // Table Page
         lbl_transport_type: "运输类型:",
         opt_select_type: "选择运输类型",
@@ -333,42 +380,28 @@ const translations = {
         col_range_edit: "范围 (编辑)",
         col_price_yuan: "价格 (元)",
         col_action: "操作",
-        btn_add_row: "+ 添加行"
+        btn_add_row: "+ 添加行",
+
+        // History Page
+        col_time: "时间 / 日期",
+        col_box_option: "装箱选项",
+        col_qty: "数量",
+        col_unit: "单位",
+        col_net_weight: "净重 (kg)",
+        col_net_dims: "净尺寸 (cm)",
+        msg_loading: "正在加载数据...",
+        msg_no_history: "未找到历史记录"
     }
 };
 
 // =============================
 // Helpers
 // =============================
-const toNum = (v) => {
-    if (!v) return 0;
-    return Number.parseFloat(String(v).replace(/,/g, '')) || 0;
-};
-
-const formatNum = (n, decimals = 2) => {
-    if (n === "" || n === null || n === undefined || isNaN(n)) return "";
-    return Number(n).toLocaleString("en-US", {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals
-    });
-};
-
-const round2 = (n) => Math.round(n * 100) / 100;
-const round3 = (n) => Math.round(n * 1000) / 1000;
-
-function setIfElement(el, value) {
-    if (el) el.value = value;
-}
-
+const toNum = (v) => Number.parseFloat(String(v).replace(/,/g, '')) || 0;
+const formatNum = (n, d = 2) => (n === "" || n === undefined || isNaN(n)) ? "" : Number(n).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 function formatDateTime(d = new Date()) {
     const pad = (x) => String(x).padStart(2, "0");
-    const yy = d.getFullYear();
-    const mm = pad(d.getMonth() + 1);
-    const dd = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const mi = pad(d.getMinutes());
-    const ss = pad(d.getSeconds());
-    return `${yy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 function getCurrencyByDestination(dest) {
@@ -394,51 +427,198 @@ function getRateByDestination(dest) {
 }
 
 // =============================
-// LocalStorage: History
+// Firebase History Logic
 // =============================
-function loadHistory() {
-    try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; }
+
+// 1. ฟังก์ชัน Save ลง Firebase
+window.saveCalculation = async function () {
+    const finalCost = document.getElementById("result-destination")?.value;
+    if (!finalCost) {
+        alert("Please calculate shipping cost first!");
+        return;
+    }
+
+    const boxOption = document.querySelector('input[name="box-option"]:checked')?.value || "-";
+    const nw = document.getElementById("net-width").value || 0;
+    const nl = document.getElementById("net-length").value || 0;
+    const nh = document.getElementById("net-height").value || 0;
+    const netDimsStr = `${nw} x ${nl} x ${nh}`;
+
+    const entry = {
+        timestamp: new Date(),
+        origin: document.getElementById("origin-country").value,
+        destination: document.getElementById("destination-country").value,
+        vendor: document.getElementById("vendor").value,
+        partNumber: document.getElementById("part-number").value,
+        goodsName: document.getElementById("goods-name").value,
+        boxOption: boxOption === 'include' ? 'Include Box' : 'Exclude Box',
+        weightQty: document.getElementById("weight-qty").value,
+        weightUnit: document.getElementById("weight-unit").value,
+        netWeight: document.getElementById("net-weight").value,
+        netDims: netDimsStr,
+        actualKg: document.getElementById("manual-gross-weight")?.value || document.getElementById("total-weight").value,
+        volumetricKg: document.getElementById("grand-volume").value,
+        chargeableKg: document.getElementById("chargeable-weight").value,
+        totalVolume: document.getElementById("total-volume").value,
+        cost: toNum(finalCost),
+        currency: getCurrencyByDestination(document.getElementById("destination-country").value)
+    };
+
+    await addHistoryEntry(entry);
+    alert("Saved to History!");
+};
+
+// 2. ฟังก์ชันเพิ่มลง Database
+window.addHistoryEntry = async function (entry) {
+    try {
+        await addDoc(collection(db, "history"), entry);
+        console.log("History saved to Cloud!");
+    } catch (e) {
+        console.error("Error adding document: ", e);
+        if (!e.message.includes("api-key")) {
+            alert("Error saving history: " + e.message);
+        }
+    }
+};
+
+// 3. ฟังก์ชันดึงข้อมูล History
+let allHistoryDocs = [];
+let currentPage = 1;
+const rowsPerPage = 10;
+
+function initRealtimeHistory() {
+    if (!document.getElementById("history-body")) return;
+
+    try {
+        const q = query(collection(db, "history"), orderBy("timestamp", "desc"));
+        onSnapshot(q, (querySnapshot) => {
+            allHistoryDocs = [];
+            querySnapshot.forEach((doc) => {
+                allHistoryDocs.push(doc.data());
+            });
+            renderHistoryPage(currentPage);
+        }, (error) => {
+            console.log("History load error:", error);
+        });
+    } catch (e) {
+        console.log("Firestore not ready.");
+    }
 }
-function saveHistory(hist) { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(hist)); } catch { } }
-function addHistoryEntry(entry) {
-    const hist = loadHistory();
-    hist.unshift(entry);
-    if (hist.length > 500) hist.length = 500;
-    saveHistory(hist);
-    renderHistory();
-}
-function clearHistory() { saveHistory([]); renderHistory(); }
-function renderHistory() {
+
+function renderHistoryPage(page) {
+    const historyTableBody = document.getElementById("history-body");
+    const paginationControls = document.getElementById("pagination-controls");
     if (!historyTableBody) return;
-    const hist = loadHistory();
+
+    const totalDocs = allHistoryDocs.length;
+    const totalPages = Math.ceil(totalDocs / rowsPerPage) || 1;
+
+    if (page > totalPages) page = totalPages;
+    if (page < 1) page = 1;
+    currentPage = page;
+
+    const startIndex = (page - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const pageDocs = allHistoryDocs.slice(startIndex, endIndex);
+
     historyTableBody.innerHTML = "";
-    for (const h of hist) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-      <td>${h.time}</td>
-      <td>${h.origin || "-"}</td>
-      <td>${h.destination || "-"}</td>
-      <td>${h.vendor || "-"}</td>
-      <td class="text-right">${formatNum(h.actualKg, 3)}</td>
-      <td class="text-right">${formatNum(h.volumetricKg, 3)}</td>
-      <td class="text-right">${formatNum(h.chargeableKg, 3)}</td>
-      <td class="text-right">${formatNum(h.totalVolume, 0)}</td>
-      <td class="text-right">${h.currency} ${formatNum(h.cost, 2)}</td>
-    `;
-        historyTableBody.appendChild(tr);
+    if (pageDocs.length === 0) {
+        const msg = translations[currentLang].msg_no_history || "No history found.";
+        historyTableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 40px; color: #94a3b8;">${msg}</td></tr>`;
+    } else {
+        pageDocs.forEach((h) => {
+            const timeStr = h.timestamp && h.timestamp.toDate ? formatDateTime(h.timestamp.toDate()) : h.time;
+
+            // แปลงภาษา Box Option
+            let boxText = h.boxOption || "-";
+            if (h.boxOption === 'Include Box') boxText = translations[currentLang].lbl_box_include || "Include Box";
+            if (h.boxOption === 'Exclude Box') boxText = translations[currentLang].lbl_box_exclude || "Exclude Box";
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+            <td style="font-size: 0.8rem; color: #64748b; white-space: nowrap;">${timeStr}</td>
+            <td>${h.partNumber || "-"}</td>
+            <td>${h.goodsName || "-"}</td>
+            <td>${boxText}</td>
+            <td class="text-right">${h.weightQty || "-"}</td>
+            <td>${h.weightUnit || "-"}</td>
+            <td class="text-right">${h.netWeight || "-"}</td>
+            <td style="font-size: 0.85rem; white-space: nowrap;">${h.netDims || "-"}</td>
+            <td>${h.vendor || "-"}</td>
+            <td class="text-right" style="font-weight: bold; color: #059669; white-space: nowrap;">
+                ${h.currency || ""} ${formatNum(h.cost, 2)}
+            </td>
+            `;
+            historyTableBody.appendChild(tr);
+        });
+    }
+
+    if (paginationControls) {
+        paginationControls.innerHTML = "";
+
+        const prevBtn = document.createElement("button");
+        prevBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`;
+        prevBtn.className = "page-btn";
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => renderHistoryPage(currentPage - 1);
+        paginationControls.appendChild(prevBtn);
+
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+        if (startPage < 1) startPage = 1;
+
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = i;
+            btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+            btn.onclick = () => renderHistoryPage(i);
+            paginationControls.appendChild(btn);
+        }
+
+        const nextBtn = document.createElement("button");
+        nextBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`;
+        nextBtn.className = "page-btn";
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => renderHistoryPage(currentPage + 1);
+        paginationControls.appendChild(nextBtn);
     }
 }
 
 // =============================
 // LocalStorage: Row Configuration
 // =============================
+function getInitialRates() {
+    const rates = {};
+    rates['dhl'] = { "0.5": 1837.60, "1.0": 2059.47, "1.5": 2281.34, "2.0": 2503.21, "2.5": 2777.72, "3.0": 2988.31, "3.5": 3198.90, "4.0": 3409.49, "4.5": 3620.08, "5.0": 3830.67, "5.5": 4017.44, "6.0": 4204.21, "6.5": 4390.98, "7.0": 4577.75, "7.5": 4764.52, "8.0": 4951.29, "8.5": 5138.06, "9.0": 5324.83, "9.5": 5511.60, "10.0": 5698.37, "10.5": 5717.17, "11.0": 5735.97, "11.5": 5754.77, "12.0": 5773.57, "12.5": 5792.37, "13.0": 5811.17, "13.5": 5829.97, "14.0": 5848.77, "14.5": 5867.57, "15.0": 5886.37, "15.5": 5905.17, "16.0": 5923.97, "16.5": 5942.77, "17.0": 5961.57, "17.5": 5980.37, "18.0": 5999.17, "18.5": 6017.97, "19.0": 6036.77, "19.5": 6055.57, "20.0": 6074.37, "20.5": 6179.67, "21.0": 6284.97, "21.5": 6390.27, "22.0": 6495.57, "22.5": 6600.87, "23.0": 6706.17, "23.5": 6811.47, "24.0": 6916.77, "24.5": 7022.07, "25.0": 7127.37, "25.5": 7232.67, "26.0": 7337.97, "26.5": 7443.27, "27.0": 7548.57, "27.5": 7653.87, "28.0": 7759.17, "28.5": 7864.47, "29.0": 7969.77, "29.5": 8075.07, "30.0": 8180.37, "31-44": 130.37, "45-70": 130.37, "71-99": 112.81, "100-299": 112.81, "> 300": 121.58 };
+    rates['sf'] = { "0.5": 534.00, "1.0": 666.00, "1.5": 795.00, "2.0": 927.00, "2.5": 1056.00, "3.0": 1179.00, "3.5": 1299.00, "4.0": 1410.00, "4.5": 1530.00, "5.0": 1641.00, "5.5": 1755.00, "6.0": 1863.00, "6.5": 197.00, "7.0": 2085.00, "7.5": 2199.00, "8.0": 2307.00, "8.5": 2424.00, "9.0": 2529.00, "9.5": 2646.00, "10.0": 2754.00, "10.5": 2853.00, "11.0": 2958.00, "11.5": 3060.00, "12.0": 3162.00, "12.5": 3267.00, "13.0": 3366.00, "13.5": 3468.00, "14.0": 3573.00, "14.5": 3672.00, "15.0": 3777.00, "15.5": 3876.00, "16.0": 3975.00, "16.5": 4071.00, "17.0": 4170.00, "17.5": 4269.00, "18.0": 4368.00, "18.5": 4467.00, "19.0": 4563.00, "19.5": 4638.00, "20.0": 4740.00, "20.5": 4740.00, "21.0": 4977.00, "21.5": 4977.00, "22.0": 5214.00, "22.5": 5214.00, "23.0": 5451.00, "23.5": 5451.00, "24.0": 5688.00, "24.5": 5688.00, "25.0": 5925.00, "25.5": 5925.00, "26.0": 6162.00, "26.5": 6162.00, "27.0": 6399.00, "27.5": 6399.00, "28.0": 6636.00, "28.5": 6636.00, "29.0": 6873.00, "29.5": 6873.00, "30.0": 7110.00, "31-44": 237.00, "45-70": 237.00, "71-99": 234.00, "100-299": 234.00, "> 300": 222.00 };
+    rates['ups'] = {}; rates['fedex'] = {};
+    rates['v01199'] = { "1.0": 700, "other": 1000 };
+    rates['v01198'] = { "0 - 10.0": 13, "10.1 - 45.0": 12, "45.1 - 100.0": 11, "100.1 - 300.0": 10, ">300": 9, "special": 18 };
+    return rates;
+}
+
 function getInitialRowConfig() {
     const airRows = [];
     for (let w = 0.5; w <= 30.0; w += 0.5) airRows.push(w.toFixed(1));
-    airRows.push("30.1-70", "70.1-300", "71-299", "300-1000", "300.1-99,999");
+    airRows.push("31-44", "45-70", "71-99", "100-299", "> 300");
     const seaRows = ["1.0", "other"];
     const landRows = ["0 - 10.0", "10.1 - 45.0", "45.1 - 100.0", "100.1 - 300.0", ">300", "special"];
     return { air: airRows, sea: seaRows, land: landRows };
+}
+
+function loadRates() {
+    let rates = {};
+    try {
+        const stored = localStorage.getItem(RATES_KEY);
+        if (stored) rates = JSON.parse(stored);
+    } catch { rates = {}; }
+    if (Object.keys(rates).length === 0) {
+        rates = getInitialRates();
+        localStorage.setItem(RATES_KEY, JSON.stringify(rates));
+        saveRowConfig(getInitialRowConfig());
+    }
+    return rates;
 }
 
 function loadRowConfig() {
@@ -455,60 +635,48 @@ function saveRowConfig(config) {
     localStorage.setItem(ROW_CONFIG_KEY, JSON.stringify(config));
 }
 
-function renameRowKey(type, oldKey, newKey) {
-    if (oldKey === newKey) return;
-    const config = loadRowConfig();
-    const index = config[type].indexOf(oldKey);
-    if (index !== -1) {
-        config[type][index] = newKey;
-        saveRowConfig(config);
-    }
+function saveRate(vendor, key, price) {
+    if (!vendor) return;
     const rates = loadRates();
-    let vendors = getVendorsByType(type);
-    vendors.forEach(v => {
-        if (rates[v] && rates[v][oldKey] !== undefined) {
-            rates[v][newKey] = rates[v][oldKey];
-            delete rates[v][oldKey];
+    if (!rates[vendor]) rates[vendor] = {};
+    rates[vendor][key] = price;
+    localStorage.setItem(RATES_KEY, JSON.stringify(rates));
+}
+
+function getRateFromStorage(vendor, val) {
+    const rates = loadRates();
+    if (!rates[vendor]) return null;
+    const vendorRates = rates[vendor];
+    for (const key in vendorRates) {
+        if (key.includes("-")) {
+            const parts = key.split("-").map(s => parseFloat(s.trim().replace(/,/g, '')));
+            if (parts.length === 2 && val >= parts[0] && val <= parts[1]) {
+                const priceVal = toNum(vendorRates[key]);
+                if (!isNaN(priceVal)) return { type: 'per_unit', price: priceVal };
+            }
         }
-    });
-    localStorage.setItem(RATES_KEY, JSON.stringify(rates));
-}
-
-function addNewRow(type) {
-    const config = loadRowConfig();
-    const newKey = "New Row " + (config[type].length + 1);
-    config[type].push(newKey);
-    saveRowConfig(config);
-    refreshTableByType(type);
-}
-
-function deleteRow(type, index) {
-    if (!confirm("Are you sure you want to delete this row?")) return;
-    const config = loadRowConfig();
-    const keyToRemove = config[type][index];
-    config[type].splice(index, 1);
-    saveRowConfig(config);
-    const rates = loadRates();
-    let vendors = getVendorsByType(type);
-    vendors.forEach(v => {
-        if (rates[v]) delete rates[v][keyToRemove];
-    });
-    localStorage.setItem(RATES_KEY, JSON.stringify(rates));
-    refreshTableByType(type);
-}
-
-function reorderRow(type, fromIndex, toIndex) {
-    const config = loadRowConfig();
-    const list = config[type];
-    if (fromIndex < 0 || fromIndex >= list.length || toIndex < 0 || toIndex >= list.length) return;
-    const [movedItem] = list.splice(fromIndex, 1);
-    list.splice(toIndex, 0, movedItem);
-    saveRowConfig(config);
-    refreshTableByType(type);
+        if (key.includes(">")) {
+            const limit = parseFloat(key.replace(/[^\d.]/g, ''));
+            if (val > limit) {
+                const priceVal = toNum(vendorRates[key]);
+                if (!isNaN(priceVal)) return { type: 'per_unit', price: priceVal };
+            }
+        }
+        if (key === String(val) || parseFloat(key) === val) {
+            return { type: 'fixed', price: toNum(vendorRates[key]) };
+        }
+    }
+    if (['dhl', 'fedex', 'ups', 'sf'].includes(vendor)) {
+        let v = Math.ceil(val * 2) / 2;
+        if (v < 0.5) v = 0.5;
+        const lookupKey = v.toFixed(1);
+        if (vendorRates[lookupKey]) return { type: 'fixed', price: toNum(vendorRates[lookupKey]) };
+    }
+    return null;
 }
 
 // =============================
-// DRAG & DROP LOGIC
+// Table Generation & Drag/Drop
 // =============================
 function addDragEvents(tr, type, index) {
     tr.dataset.index = index;
@@ -544,27 +712,25 @@ function addDragEvents(tr, type, index) {
 function createActionButtons(type, index, tr) {
     const div = document.createElement("div");
     div.className = "action-buttons";
-    div.style.alignItems = "center";
+
+    // Drag Handle
     const dragHandle = document.createElement("span");
-    dragHandle.innerHTML = "&#10294;";
+    dragHandle.innerHTML = "&#9776;"; // Hamburger Icon
     dragHandle.className = "drag-handle";
     dragHandle.title = "Drag to reorder";
     dragHandle.addEventListener('mouseenter', () => { if (tr) tr.setAttribute('draggable', 'true'); });
     dragHandle.addEventListener('mouseleave', () => { if (tr) tr.setAttribute('draggable', 'false'); });
     dragHandle.addEventListener('touchstart', () => { if (tr) tr.setAttribute('draggable', 'true'); });
     div.appendChild(dragHandle);
+
     const btnDel = document.createElement("button");
     btnDel.textContent = "X";
     btnDel.className = "btn-delete";
-    btnDel.title = "Delete";
     btnDel.onclick = () => deleteRow(type, index);
     div.appendChild(btnDel);
     return div;
 }
 
-// =============================
-// Table Generators
-// =============================
 function generateAirTableRows(tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
@@ -577,6 +743,7 @@ function generateAirTableRows(tbodyId) {
         const tdAction = document.createElement("td");
         tdAction.appendChild(createActionButtons('air', index, tr));
         addDragEvents(tr, 'air', index);
+
         const tdKg = document.createElement("td");
         tdKg.contentEditable = "true";
         tdKg.textContent = rowKey;
@@ -618,6 +785,7 @@ function generateV01198Rows(tbodyId) {
         const tdAction = document.createElement("td");
         tdAction.appendChild(createActionButtons('land', index, tr));
         addDragEvents(tr, 'land', index);
+
         const tdRange = document.createElement("td");
         tdRange.contentEditable = "true";
         tdRange.textContent = rowKey;
@@ -657,6 +825,7 @@ function generateV01199Rows(tbodyId) {
         const tdAction = document.createElement("td");
         tdAction.appendChild(createActionButtons('sea', index, tr));
         addDragEvents(tr, 'sea', index);
+
         const tdLabel = document.createElement("td");
         tdLabel.contentEditable = "true";
         tdLabel.textContent = rowKey;
@@ -683,14 +852,12 @@ function generateV01199Rows(tbodyId) {
     });
 }
 
-// Helper to refresh table
 function refreshTableByType(type) {
     if (type === 'air') generateAirTableRows("tbody-air");
     else if (type === 'sea') generateV01199Rows("tbody-v01199");
     else if (type === 'land') generateV01198Rows("tbody-v01198");
 }
 
-// Helper to get vendors
 function getVendorsByType(type) {
     if (type === 'air') return ['dhl', 'fedex', 'ups', 'sf'];
     if (type === 'sea') return ['v01199'];
@@ -698,100 +865,101 @@ function getVendorsByType(type) {
     return [];
 }
 
-// =============================
-// LocalStorage: Rates
-// =============================
-function loadRates() {
-    try { return JSON.parse(localStorage.getItem(RATES_KEY)) || {}; } catch { return {}; }
+window.addNewRow = function (type) {
+    const config = loadRowConfig();
+    const newKey = "New Row " + (config[type].length + 1);
+    config[type].push(newKey);
+    saveRowConfig(config);
+    refreshTableByType(type);
 }
-function saveRate(vendor, key, price) {
-    if (!vendor) return;
+
+function renameRowKey(type, oldKey, newKey) {
+    if (oldKey === newKey) return;
+    const config = loadRowConfig();
+    const index = config[type].indexOf(oldKey);
+    if (index !== -1) {
+        config[type][index] = newKey;
+        saveRowConfig(config);
+    }
     const rates = loadRates();
-    if (!rates[vendor]) rates[vendor] = {};
-    rates[vendor][key] = price;
+    let vendors = getVendorsByType(type);
+    vendors.forEach(v => {
+        if (rates[v] && rates[v][oldKey] !== undefined) {
+            rates[v][newKey] = rates[v][oldKey];
+            delete rates[v][oldKey];
+        }
+    });
     localStorage.setItem(RATES_KEY, JSON.stringify(rates));
 }
-function getRateFromStorage(vendor, val) {
+
+function deleteRow(type, index) {
+    if (!confirm("Are you sure you want to delete this row?")) return;
+    const config = loadRowConfig();
+    const keyToRemove = config[type][index];
+    config[type].splice(index, 1);
+    saveRowConfig(config);
     const rates = loadRates();
-    if (!rates[vendor]) return null;
-    const vendorRates = rates[vendor];
-    for (const key in vendorRates) {
-        if (key.includes("-")) {
-            const parts = key.split("-").map(s => parseFloat(s.trim().replace(/,/g, '')));
-            if (parts.length === 2 && val >= parts[0] && val <= parts[1]) {
-                const priceVal = toNum(vendorRates[key]);
-                if (!isNaN(priceVal)) return { type: 'per_unit', price: priceVal };
-            }
-        }
-        if (key === String(val) || parseFloat(key) === val) {
-            return { type: 'fixed', price: toNum(vendorRates[key]) };
-        }
-    }
-    if (['dhl', 'fedex', 'ups', 'sf'].includes(vendor)) {
-        let v = Math.ceil(val * 2) / 2;
-        if (v < 0.5) v = 0.5;
-        const lookupKey = v.toFixed(1);
-        if (vendorRates[lookupKey]) return { type: 'fixed', price: toNum(vendorRates[lookupKey]) };
-    }
-    return null;
+    let vendors = getVendorsByType(type);
+    vendors.forEach(v => {
+        if (rates[v]) delete rates[v][keyToRemove];
+    });
+    localStorage.setItem(RATES_KEY, JSON.stringify(rates));
+    refreshTableByType(type);
+}
+
+function reorderRow(type, fromIndex, toIndex) {
+    const config = loadRowConfig();
+    const list = config[type];
+    if (fromIndex < 0 || fromIndex >= list.length || toIndex < 0 || toIndex >= list.length) return;
+    const [movedItem] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, movedItem);
+    saveRowConfig(config);
+    refreshTableByType(type);
 }
 
 // =============================
-// SessionStorage: Form State (Modified)
+// SessionStorage
 // =============================
 function saveFormState() {
-    // 1. อ่านข้อมูลเดิมที่มีอยู่ใน SessionStorage ออกมาก่อน
-    // เพื่อกันไม่ให้ข้อมูลของหน้าอื่น (เช่น Calculator) หายไปเมื่อเราอยู่หน้า Table
     let state = {};
     try {
         const stored = sessionStorage.getItem(FORM_STATE_KEY);
         if (stored) state = JSON.parse(stored);
-    } catch (e) {
-        state = {};
-    }
+    } catch (e) { state = {}; }
 
-    // 2. อัปเดต/บันทึกทับ เฉพาะ Input ที่มีอยู่ในหน้าปัจจุบัน
     document.querySelectorAll('input, select').forEach(el => {
         if (!el.id) return;
-        if (el.type === 'checkbox' || el.type === 'radio') {
-            state[el.id] = el.checked;
-        } else {
-            state[el.id] = el.value;
-        }
-    });
 
-    // 3. บันทึกกลับลงไป
+        // +++ เพิ่มบรรทัดนี้ครับ: เพื่อบอกว่า "ไม่ต้องจำค่าของ vendor-select" +++
+        if (el.id === 'vendor-select') return;
+
+        if (el.type === 'checkbox' || el.type === 'radio') state[el.id] = el.checked;
+        else state[el.id] = el.value;
+    });
     sessionStorage.setItem(FORM_STATE_KEY, JSON.stringify(state));
 }
+
 function loadFormState() {
-    // 1. Check if the page was reloaded
     const navEntry = performance.getEntriesByType("navigation")[0];
     const navType = navEntry ? navEntry.type : "";
-    // Fallback for older browsers
     const isReload = navType === 'reload' || (window.performance && window.performance.navigation && window.performance.navigation.type === 1);
+    if (isReload) { sessionStorage.removeItem(FORM_STATE_KEY); return; }
 
-    if (isReload) {
-        // If Reload -> Clear data and return (Reset)
-        sessionStorage.removeItem(FORM_STATE_KEY);
-        return;
-    }
-
-    // 2. If not reload (e.g. Navigation), load data
     const raw = sessionStorage.getItem(FORM_STATE_KEY);
     if (!raw) return;
-
     const state = JSON.parse(raw);
     for (const id in state) {
+
+        // +++ เพิ่มบรรทัดนี้ครับ: ถ้าเจอค่าเก่าของ vendor-select ก็ข้ามไปเลย ไม่ต้องโหลด +++
+        if (id === 'vendor-select') continue;
+
         const el = document.getElementById(id);
         if (el) {
-            if (el.type === 'checkbox' || el.type === 'radio') {
-                el.checked = state[id];
-            } else {
-                el.value = state[id];
-            }
+            if (el.type === 'checkbox' || el.type === 'radio') el.checked = state[id];
+            else el.value = state[id];
         }
     }
-    // Trigger Recalculations
+    
     updateWeightTotals();
     updateGrossDimensions();
     updateVolumeFromWeight();
@@ -805,28 +973,26 @@ function loadFormState() {
 // =============================
 function setLanguage(lang) {
     if (!translations[lang]) return;
-
     localStorage.setItem(LANG_KEY, lang);
-
     currentLang = lang;
 
-    if (btnEn) btnEn.classList.toggle('active', lang === 'en');
-    if (btnTh) btnTh.classList.toggle('active', lang === 'th');
-    if (btnCn) btnCn.classList.toggle('active', lang === 'cn');
+    document.querySelectorAll('.lang-switch a').forEach(el => {
+        el.classList.toggle('active', el.id === `lang-${lang}`);
+    });
 
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[lang][key]) {
-            const text = translations[lang][key];
-            if (el.tagName === 'INPUT') {
-                el.type === 'button' ? el.value = text : el.placeholder = text;
-            } else if (el.tagName === 'OPTGROUP') {
-                el.label = text;
-            } else {
-                el.textContent = text;
-            }
+            if (el.tagName === 'INPUT') el.type === 'button' ? el.value = translations[lang][key] : el.placeholder = translations[lang][key];
+            else if (el.tagName === 'OPTGROUP') el.label = translations[lang][key];
+            else el.textContent = translations[lang][key];
         }
     });
+
+    // Re-render history table to apply translations to body content
+    if (document.getElementById("history-body")) {
+        renderHistoryPage(currentPage);
+    }
     updateCostLabels();
 }
 
@@ -843,17 +1009,12 @@ function updateCostLabels() {
 // =============================
 // Main Calculations
 // =============================
-
-// Helper for total weights
 function updateTotalNetWeight() {
     const net = toNum(netWeightInput?.value);
     const qty = Math.max(1, toNum(weightQtyInput?.value) || 1);
     const totalNet = net * qty;
-
-    // [แก้ไข] เปลี่ยนตัวเลขด้านหลังเป็น 1 (ทศนิยม 1 ตำแหน่ง)
     setIfElement(totalNetWeightInput, totalNet ? formatNum(totalNet, 1) : "");
-
-    return totalNet; // ส่งค่ากลับเป็นตัวเลขจริง (3 ตำแหน่ง) เพื่อไปคำนวณต่อได้แม่นยำ
+    return totalNet;
 }
 
 function updateVolumeFromWeight() {
@@ -861,46 +1022,22 @@ function updateVolumeFromWeight() {
     const vendor = vendorSelect?.value || "";
     const divisor = toNum(volumetricDivisorInput?.value) || 500;
     let m3 = 0;
-
-    // Logic เดิมของ Sea (v01199)
-    if (vendor === 'v01199') {
-        if (divisor > 0) {
-            m3 = totalKg / divisor;
-        }
-    }
-    // Logic ใหม่: Auto convert
-    else {
-        m3 = (totalKg * divisor) / 1_000_000;
-    }
-
-    // [แก้ไขตรงนี้] เปลี่ยนจาก formatNum(m3, 3) เป็น formatNum(m3, 1)
+    if (vendor === 'v01199') { if (divisor > 0) m3 = totalKg / divisor; }
+    else { m3 = (totalKg * divisor) / 1_000_000; }
     setIfElement(volumeFromWeightOutput, totalKg ? formatNum(m3, 1) : "");
 }
-
-// ค้นหา function updateWeightTotals() แล้วแก้ส่วนล่างของฟังก์ชันดังนี้ครับ
 
 function updateWeightTotals() {
     const totalNet = updateTotalNetWeight();
     const pkg = toNum(addWeightInput?.value);
     const pkgQty = Math.max(1, toNum(packagingQtyInput?.value) || 1);
     const totalPkg = pkg * pkgQty;
-
-    // [แก้ไข] เปลี่ยนตัวเลขด้านหลังเป็น 1 (ทศนิยม 1 ตำแหน่ง)
     setIfElement(totalPackagingWeightInput, totalPkg ? formatNum(totalPkg, 1) : "");
-
     const radioInclude = document.getElementById("box-include");
     const isIncludeBox = radioInclude && radioInclude.checked;
-
-    let grandTotal = 0;
-    if (isIncludeBox) grandTotal = totalNet;
-    else grandTotal = totalNet + totalPkg;
-
-    // ส่วน Gross Weight ยังคง 1 ตำแหน่งตามเดิม
-    if (grandTotal > 0) {
-        grandTotal = Math.ceil(grandTotal * 2) / 2;
-    }
+    let grandTotal = isIncludeBox ? totalNet : totalNet + totalPkg;
+    if (grandTotal > 0) grandTotal = Math.ceil(grandTotal * 2) / 2;
     setIfElement(totalWeightInput, grandTotal ? formatNum(grandTotal, 1) : "");
-
     updateVolumeFromWeight();
 }
 
@@ -908,35 +1045,23 @@ function updateGrossDimensions() {
     const w = toNum(netWInput?.value) + toNum(addWInput?.value);
     const l = toNum(netLInput?.value) + toNum(addLInput?.value);
     const h = toNum(netHInput?.value) + toNum(addHInput?.value);
-
-    // เปลี่ยน formatNum(..., 2) เป็น formatNum(..., 0)
     setIfElement(grossWInput, (w || w === 0) ? formatNum(w, 0) : "");
     setIfElement(grossLInput, (l || l === 0) ? formatNum(l, 0) : "");
     setIfElement(grossHInput, (h || h === 0) ? formatNum(h, 0) : "");
     updateVolumes();
 }
 
-// Logic for displaying Grand Volume (kg)
 function updateGrandVolumeDisplay() {
     const vendor = vendorSelect?.value || "";
-    // Priority: Manual Input > Calculated Total Volume
     const m3 = toNum(manualTotalVolumeInput?.value) || toNum(totalVolumeInput?.value);
-
     let grandKg = 0;
-
     if (vendor === 'v01198') {
-        // [NEW LOGIC] Land: m3 * Multiplier
-        const multiplier = toNum(volumetricMultiplierInput?.value) || 200; // Default 200
+        const multiplier = toNum(volumetricMultiplierInput?.value) || 200;
         grandKg = m3 * multiplier;
     } else {
-        // [OLD LOGIC] Air/Other: (m3 * 1,000,000) / Divisor
-        const divisor = toNum(volumetricDivisorInput?.value) || 500; // Default 500
-        if (divisor > 0) {
-            grandKg = (m3 * 1_000_000) / divisor;
-        }
+        const divisor = toNum(volumetricDivisorInput?.value) || 500;
+        if (divisor > 0) grandKg = (m3 * 1_000_000) / divisor;
     }
-
-    // [แก้ไขตรงนี้] เปลี่ยนเลข 3 เป็น 1
     setIfElement(grandVolumeInput, grandKg ? formatNum(grandKg, 1) : "");
 }
 
@@ -944,36 +1069,20 @@ function updateVolumes() {
     const gw = toNum(grossWInput?.value);
     const gl = toNum(grossLInput?.value);
     const gh = toNum(grossHInput?.value);
-
-    // cm3
     const grossCm3 = gw * gl * gh;
-    // m3
     const grossM3 = grossCm3 / 1_000_000;
-
     setIfElement(grossVolumeInput, grossCm3 ? formatNum(grossM3, 1) : "");
-
     const qty = Math.max(1, toNum(dimensionQtyInput?.value) || 1);
     let totalM3 = grossM3 * qty;
-
-    // Round up to nearest 0.5
-    if (totalM3 > 0) {
-        totalM3 = Math.ceil(totalM3 * 2) / 2;
-    }
-
+    if (totalM3 > 0) totalM3 = Math.ceil(totalM3 * 2) / 2;
     setIfElement(totalVolumeInput, totalM3 ? formatNum(totalM3, 1) : "");
-
-    // [แก้ไข] เอา Comment ออก เพื่อให้คำนวณ Auto ทันทีที่ Dimension เปลี่ยน
     updateGrandVolumeDisplay();
 }
 
 function calculateShipping() {
     const vendor = vendorSelect?.value || "";
-
-    // ตัวแปรสำหรับเก็บค่าที่จะแสดงในช่อง Chargeable (ค่าที่ชนะการเปรียบเทียบ)
     let finalChargeable = 0;
-
     if (!vendor) {
-        // Clear ค่าถ้าไม่ได้เลือก Vendor
         setIfElement(chargeableInput, "");
         if (resultBoxOrigin) resultBoxOrigin.value = "";
         if (resultBoxDest) resultBoxDest.value = "";
@@ -981,191 +1090,83 @@ function calculateShipping() {
         if (fuelAmountInput) fuelAmountInput.value = "";
         return;
     }
-
-    // 1. Get Weight (Common) - น้ำหนักจริงจาก Gross Weight
     const weightVal = toNum(manualGrossWeightInput?.value) || toNum(totalWeightInput?.value);
-
     let baseCost = 0;
-
-    // ==========================================
-    // Vendor Logic: v01199 (Sea)
-    // ==========================================
     if (vendor === 'v01199') {
-        // 1. Ensure Volume from Weight is updated
         updateVolumeFromWeight();
-
-        // 2. Determine x (Volume)
-        // x = Max(Volume from Weight, Grand Dimensions)
-        const valVolWeight = toNum(volumeFromWeightOutput?.value); // Volume (m³)
-        const valGrandDim = toNum(totalVolumeInput?.value);        // Grand Dimensions (m³)
-
-        // เปรียบเทียบหาค่าที่มากกว่า (m³)
+        const valVolWeight = toNum(volumeFromWeightOutput?.value);
+        const valGrandDim = toNum(totalVolumeInput?.value);
         const x = Math.max(valVolWeight, valGrandDim);
-
-        // เก็บค่า x ไว้แสดงในช่อง Chargeable
         finalChargeable = x;
-
-        // 3. Get Constants a and b from Table
-        // a = Price for 1 m3 (Key: "1.0")
-        // b = Other (Key: "other")
         const rates = loadRates();
         const vRates = rates[vendor] || {};
-
         const a = toNum(vRates["1.0"]);
         const b = toNum(vRates["other"]);
-
-        // 4. Calculate Base Cost: ax + b
         baseCost = (a * x) + b;
-    }
-    // ==========================================
-    // Vendor Logic: Others (Air, Land, v01198)
-    // ==========================================
-    else {
-        // 1. Determine Volume (m3)
-        // Use Manual Grand Dimensions if available, otherwise Auto
+    } else {
         let calcM3 = toNum(manualTotalVolumeInput?.value) || toNum(totalVolumeInput?.value);
-
-        // 2. Determine Chargeable Weight
         const totalCm3 = calcM3 * 1_000_000;
         let volKg = 0;
-
         if (vendor === 'v01198') {
-            // Land: m3 * Multiplier
             const multiplier = toNum(volumetricMultiplierInput?.value) || 200;
             volKg = calcM3 * multiplier;
         } else {
-            // Air: (m3 * 1,000,000) / Divisor
             const divisor = toNum(volumetricDivisorInput?.value) || VOLUMETRIC_DIVISOR;
             if (divisor > 0) volKg = totalCm3 / divisor;
         }
-
-        // เปรียบเทียบหาค่าที่มากกว่า (kg) ระหว่าง Gross Weight กับ Volumetric Weight
         const chargeable = Math.max(weightVal, volKg);
-
-        // เก็บค่า chargeable ไว้แสดงในช่อง Chargeable
         finalChargeable = chargeable;
-
-        // 3. Lookup Rate
         const lookupValue = chargeable;
-        // เปลี่ยนบรรทัดนี้เพื่อรองรับ Logic ใหม่
         let customRate = getRateFromStorage(vendor, lookupValue);
-
-        // [เพิ่มใหม่] ตรวจสอบ Checkbox Special
-        // หากติ๊กถูก ให้พยายามหาราคาจาก Key "special" ในตาราง (รองรับ v01198 หรือ Vendor อื่นที่มีแถวชื่อ special)
         if (isSpecialCheckbox && isSpecialCheckbox.checked) {
             const rates = loadRates();
             if (rates[vendor] && rates[vendor]["special"]) {
                 const specialPrice = toNum(rates[vendor]["special"]);
-                if (specialPrice > 0) {
-                    // ถ้าเจอราคา Special ให้ใช้ราคานั้นเป็นแบบต่อหน่วย (Price per Unit) ทันที
-                    customRate = { type: 'per_unit', price: specialPrice };
-                }
+                if (specialPrice > 0) customRate = { type: 'per_unit', price: specialPrice };
             }
         }
-
         if (customRate) {
             baseCost = (customRate.type === 'fixed') ? customRate.price : (lookupValue * customRate.price);
         } else {
-            // Fallbacks กรณีไม่มี Rate ในตาราง
-            if (vendor === "v01198") { // Land fallback logic
+            if (vendor === "v01198") {
                 let p = 10;
                 if (chargeable <= 10) p = 13;
                 else if (chargeable <= 45) p = 12;
                 else if (chargeable <= 100) p = 11;
                 baseCost = chargeable * p;
-            } else { // Air fallback logic
+            } else {
                 const mul = (vendor === 'dhl') ? 1.15 : (vendor === 'fedex') ? 1.1 : 1.0;
                 baseCost = chargeable * 50 * mul;
             }
         }
     }
-
-    // ==========================================
-    // Update Chargeable Display (แสดง 1 ตำแหน่ง)
-    // ==========================================
     setIfElement(chargeableInput, formatNum(finalChargeable, 1));
-
-    // ==========================================
-    // Final Calculation (Common)
-    // ==========================================
     const exchange = toNum(rateInput?.value) || 1;
     const fuel = baseCost * (toNum(fuelPercentInput?.value) / 100);
-    const other = toNum(otherInput?.value); // Manual Other Charge field
-
+    const other = toNum(otherInput?.value);
     setIfElement(fuelAmountInput, formatNum(fuel));
     const finalCost = (baseCost + fuel + other) * exchange;
-
     if (resultBoxOrigin) resultBoxOrigin.value = formatNum(baseCost);
     if (resultBoxDest) resultBoxDest.value = formatNum(finalCost);
-
     const qty = Math.max(1, toNum(weightQtyInput?.value) || 1);
     setIfElement(pricePerPieceInput, formatNum(finalCost / qty));
 }
 
-// =============================
 // Events
-// =============================
 const inputsToWatch = [netWeightInput, weightQtyInput, addWeightInput, packagingQtyInput, manualGrossWeightInput, volumetricDivisorInput];
-inputsToWatch.forEach(el => el?.addEventListener("input", () => {
-    updateWeightTotals();
-    calculateShipping();
-}));
-
+inputsToWatch.forEach(el => el?.addEventListener("input", () => { updateWeightTotals(); calculateShipping(); }));
 const dimInputs = [netWInput, netLInput, netHInput, addWInput, addLInput, addHInput, grossWInput, grossLInput, grossHInput, dimensionQtyInput, manualTotalVolumeInput];
-dimInputs.forEach(el => el?.addEventListener("input", () => {
-    updateGrossDimensions();
-    calculateShipping();
-}));
-
-// Listener for Multiplier Input
-volumetricMultiplierInput?.addEventListener("input", () => {
-    // [แก้ไข] เอา Comment ออก
-    updateGrandVolumeDisplay();
-
-    calculateShipping();
-});
-
-// เพื่อให้เมื่อแก้ Divisor แล้ว Volume และ Grand Volume เปลี่ยนทันที
-volumetricDivisorInput?.addEventListener("input", () => {
-    updateVolumeFromWeight();      // คำนวณ Volume (m3) ใหม่
-    updateGrandVolumeDisplay();    // คำนวณ Grand Volume (kg) ใหม่
-    calculateShipping();           // คำนวณราคาใหม่
-});
-
-vendorSelect?.addEventListener("change", () => {
-    updateVolumeFromWeight();
-
-    // [แก้ไข] เอา Comment ออก เพื่อให้คำนวณ Grand Volume (kg) ใหม่ตามสูตรของ Vendor นั้นๆ
-    updateGrandVolumeDisplay();
-
-    calculateShipping();
-});
-
+dimInputs.forEach(el => el?.addEventListener("input", () => { updateGrossDimensions(); calculateShipping(); }));
+volumetricMultiplierInput?.addEventListener("input", () => { updateGrandVolumeDisplay(); calculateShipping(); });
+volumetricDivisorInput?.addEventListener("input", () => { updateVolumeFromWeight(); updateGrandVolumeDisplay(); calculateShipping(); });
+vendorSelect?.addEventListener("change", () => { updateVolumeFromWeight(); updateGrandVolumeDisplay(); calculateShipping(); });
 rateInput?.addEventListener("input", calculateShipping);
 fuelPercentInput?.addEventListener("input", calculateShipping);
 otherInput?.addEventListener("input", calculateShipping);
 document.getElementById("is-special")?.addEventListener("change", calculateShipping);
-
 originCountrySelect?.addEventListener("change", () => { updateCostLabels(); calculateShipping(); });
-destinationCountrySelect?.addEventListener("change", () => {
-    if (rateInput) rateInput.value = getRateByDestination(destinationCountrySelect.value);
-    updateCostLabels(); calculateShipping();
-});
-historyClearBtn?.addEventListener("click", clearHistory);
+destinationCountrySelect?.addEventListener("change", () => { if (rateInput) rateInput.value = getRateByDestination(destinationCountrySelect.value); updateCostLabels(); calculateShipping(); });
 
-// Manual Convert Button (General Case)
-// document.getElementById("btn-convert-vol")?.addEventListener("click", function () {
-//     const totalKg = toNum(manualGrossWeightInput?.value) || toNum(totalWeightInput?.value);
-//     const m3 = (totalKg * VOLUMETRIC_DIVISOR) / 1_000_000;
-//     setIfElement(volumeFromWeightOutput, totalKg ? formatNum(m3, 3) : "");
-// });
-
-// document.getElementById("btn-convert-dim")?.addEventListener("click", function () {
-//     // [UPDATED] Use centralized function logic
-//     updateGrandVolumeDisplay();
-// });
-
-// Language Button Listeners
 if (btnEn) btnEn.addEventListener("click", (e) => { e.preventDefault(); setLanguage("en"); });
 if (btnTh) btnTh.addEventListener("click", (e) => { e.preventDefault(); setLanguage("th"); });
 if (btnCn) btnCn.addEventListener("click", (e) => { e.preventDefault(); setLanguage("cn"); });
@@ -1180,43 +1181,21 @@ if (tableVendorSelect) {
     });
 }
 
-// Input Focus Logic
 const allInputs = document.querySelectorAll('input[type="text"], input[type="number"]');
-const textFields = ["goods-name", "part-number"]; // Fields to exclude from number formatting
-
+const textFields = ["goods-name", "part-number", "hs-code"];
 allInputs.forEach(el => {
     el.addEventListener("focus", function () {
-        if (this.value && !textFields.includes(this.id)) { // Only strip commas if NOT a text field
-            this.value = this.value.replace(/,/g, '');
-        }
+        if (this.value && !textFields.includes(this.id)) this.value = this.value.replace(/,/g, '');
         this.select();
     });
-
-    // ค้นหา Event Listener ของ blur ในช่วงท้ายไฟล์ แล้วแทนที่ด้วยโค้ดชุดนี้ครับ
-
-    // ค้นหาและแทนที่ Logic ภายใน blur event ด้วยโค้ดนี้ครับ
-
     el.addEventListener("blur", function () {
         if (this.value && !this.readOnly && !textFields.includes(this.id)) {
             const v = toNum(this.value);
-
-            // 1. กลุ่ม 0 ตำแหน่ง (Dimensions)
             const isDim = this.id.includes("width") || this.id.includes("length") || this.id.includes("height");
-
-            // 2. [แก้ไข] กลุ่ม 3 ตำแหน่ง (Volume, Gross Weight input, และเพิ่ม Net/Add Weight กลับเข้ามา)
-            const isThreeDecimal = this.id.includes("Volume") ||
-                this.id.includes("dimensions") ||
-                this.id.includes("gross-weight") ||
-                this.id === "net-weight" ||   // <--- เพิ่ม
-                this.id === "add-weight";     // <--- เพิ่ม
-
-            // กำหนดทศนิยม: ถ้าไม่ใช่ Dim และไม่ใช่กลุ่ม 3 ตำแหน่ง ให้เป็น 2 ตำแหน่ง (เช่น ราคา)
+            const isThreeDecimal = this.id.includes("Volume") || this.id.includes("dimensions") || this.id.includes("gross-weight") || this.id === "net-weight" || this.id === "add-weight";
             const decimals = isDim ? 0 : (isThreeDecimal ? 3 : 2);
-
-            // บังคับ 0 ทศนิยมสำหรับ Gross Volume (cm³)
-            if (this.id === "gross-volume") {
-                this.value = formatNum(v, 1);
-            } else {
+            if (this.id === "gross-volume") this.value = formatNum(v, 1);
+            else {
                 const isIntField = this.id.includes("qty") || this.id.includes("divisor") || this.id.includes("multiplier");
                 this.value = isIntField ? formatNum(v, 0) : formatNum(v, decimals);
             }
@@ -1224,22 +1203,18 @@ allInputs.forEach(el => {
     });
 });
 
-// Init
 document.addEventListener("DOMContentLoaded", () => {
     setLanguage(localStorage.getItem(LANG_KEY) || "en");
-    renderHistory();
-    // [NEW] Load saved form state immediately (with Refresh check)
+    initRealtimeHistory();
     loadFormState();
-
-    // [NEW] Prevent dragging on all inputs/selects (Fix for index_new to prevent accidental drags)
     document.querySelectorAll('input, select').forEach(el => {
         el.setAttribute('draggable', 'false');
-        el.addEventListener('dragstart', (e) => {
-            e.preventDefault();
-        });
-
-        // [NEW] Attach Auto-Save listeners to everything
+        el.addEventListener('dragstart', (e) => { e.preventDefault(); });
         el.addEventListener('change', saveFormState);
-        el.addEventListener('input', saveFormState); // Optional: save on every keystroke
+        el.addEventListener('input', saveFormState);
+    });
+    const radioButtons = document.querySelectorAll('input[name="box-option"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', () => { updateWeightTotals(); calculateShipping(); saveFormState(); });
     });
 });
