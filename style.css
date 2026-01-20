@@ -389,13 +389,13 @@ button:hover {
    Mobile / Responsive Styles
    ========================================= */
 
-/* ซ่อนปุ่ม Hamburger ในหน้าจอปกติ */
+/* ซ่อนปุ่ม Hamburger ในหน้าจอ PC */
 .hamburger {
     display: none;
     background: none;
     border: none;
     color: white;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     cursor: pointer;
     padding: 0 10px;
 }
@@ -403,79 +403,131 @@ button:hover {
 /* --- ปรับแต่งสำหรับมือถือ (หน้าจอเล็กกว่า 768px) --- */
 @media (max-width: 768px) {
 
-    /* 1. ปรับ Navbar ให้มีปุ่มเมนู */
+    /* 1. แสดงปุ่ม Hamburger */
     .hamburger {
         display: block;
-        /* แสดงปุ่มขีดๆ */
+        
+        /* ดันปุ่มไปขวาสุด */
+        margin-left: auto !important; 
+        margin-right: 0;
+        margin-bottom: 5px;
+
+        /* ล้างค่าเดิมที่ทำให้ปุ่มยืดและมีสีพื้นหลัง */
+        width: auto !important;       /* สำคัญ: แก้ไม่ให้ปุ่มกว้างเต็มจอ */
+        background: transparent !important; /* สำคัญ: เอาพื้นหลังสีน้ำเงินออก */
+        border: none;
+        box-shadow: none;             /* เอาเงาออก */
+        
+        /* จัดขนาดไอคอน */
+        font-size: 1.8rem;
+        color: white;
+        cursor: pointer;
+        padding: 0 0px;              /* เพิ่มพื้นที่กดให้ง่ายขึ้น */
     }
 
+    /* 2. ปรับแต่ง Nav Menu ให้เป็น Dropdown ลงมา */
     .nav-menu {
-        display: none;
-        /* ซ่อนเมนูไว้ก่อน */
-        flex-direction: column;
         position: absolute;
-        top: 56px;
-        /* ความสูง Navbar */
+        top: 100%;
+        /* ให้เริ่มต่อจากขอบล่างของ Navbar */
         left: 0;
         width: 100%;
         background-color: #0f172a;
-        padding: 15px 0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        /* สีเดียวกับ Navbar */
+        flex-direction: column;
+        align-items: center;
+        padding: 0;
+        margin: 0;
+
+        /* ซ่อนเมนูโดยใช้ Max-height เพื่อทำ Animation (Option) หรือใช้ display */
+        display: none;
+        border-top: 1px solid #334155;
+        /* เส้นคั่นบางๆ ระหว่างบาร์กับเมนู */
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        z-index: 9999;
+        /* สำคัญ: ให้ลอยอยู่เหนือเนื้อหาอื่น */
     }
 
+    /* คลาสนี้จะถูกเติมโดย JavaScript เมื่อกดปุ่ม */
     .nav-menu.active {
         display: flex;
-        /* แสดงเมื่อกดปุ่ม */
+        animation: slideDown 0.3s ease-in-out;
     }
 
     .nav-menu li {
+        width: 100%;
         text-align: center;
-        margin: 10px 0;
+        margin: 0;
     }
 
+    .nav-menu li a {
+        display: block;
+        padding: 15px 0;
+        width: 100%;
+        transition: background 0.2s;
+    }
+
+    .nav-menu li a:hover {
+        background-color: #1e293b;
+        /* สีพื้นหลังเมื่อเอาเมาส์ชี้ในมือถือ */
+        color: #38bdf8;
+    }
+
+    /* จัดการส่วนเปลี่ยนภาษาในมือถือ */
     .lang-switch {
+        margin: 0;
+        padding: 15px 0;
+        width: 100%;
         justify-content: center;
-        margin-left: 0;
-        margin-top: 10px;
+        border-top: 1px solid #1e293b;
+        background-color: #0f172a;
     }
 
-    /* 2. ปรับ Grid ต่างๆ ให้เรียงเป็นแนวตั้ง */
+    /* Animation เล็กน้อยตอนเปิดเมนู */
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* 3. ปรับ Grid ต่างๆ ให้เรียงเป็นแนวตั้ง (Stack) */
     .cards-vertical,
     .two-col,
     .three-col,
     .four-col,
     .five-col,
     .six-col,
-    .weight-row {
-        grid-template-columns: 1fr !important;
-        /* บังคับให้เหลือ 1 คอลัมน์ */
-        gap: 15px;
-    }
-
-    /* 3. ปรับตาราง Vendor (ส่วนที่ซับซ้อนที่สุด) */
+    .weight-row,
     .vendor-grid {
         grid-template-columns: 1fr !important;
         gap: 15px;
     }
 
-    /* จัด layout ของ Vendor ใหม่ให้อ่านง่ายขึ้นในมือถือ */
-    .vendor-grid>div {
-        margin-bottom: 5px;
+    /* ปรับความกว้างของ Filter Group ในหน้า Table */
+    .filter-group {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
     }
 
-    /* 4. ปรับปุ่มและ Input ให้กดง่ายขึ้น */
-    input,
-    select,
-    button {
-        height: 44px;
-        /* ความสูงมาตรฐานปุ่มบนมือถือ */
-        font-size: 16px;
-        /* ป้องกัน iOS ซูมเอง */
+    .filter-group select {
+        width: 100%;
     }
 
+    .table-actions {
+        justify-content: flex-start;
+    }
+
+    /* ปรับ Container */
     .container {
-        padding: 0 10px;
-        /* ลดขอบข้างให้เนื้อหาเต็มจอขึ้น */
+        padding: 0 15px;
+        max-width: 100%;
     }
 }
 
