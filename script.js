@@ -964,7 +964,7 @@ function loadFormState() {
             else el.value = state[id];
         }
     }
-    
+
     updateWeightTotals();
     updateGrossDimensions();
     updateVolumeFromWeight();
@@ -1087,7 +1087,7 @@ function updateVolumes() {
 function calculateShipping() {
     const vendor = vendorSelect?.value || "";
     let finalChargeable = 0;
-    
+
     if (!vendor) {
         setIfElement(chargeableInput, "");
         if (resultBoxOrigin) resultBoxOrigin.value = "";
@@ -1120,7 +1120,7 @@ function calculateShipping() {
         const a = toNum(vRates["1.0"]);
         const b = toNum(vRates["other"]);
         baseCost = (a * x) + b;
-    // ---------------------------------------------------
+        // ---------------------------------------------------
 
     } else {
         let calcM3 = toNum(manualTotalVolumeInput?.value) || toNum(totalVolumeInput?.value);
@@ -1137,7 +1137,7 @@ function calculateShipping() {
         finalChargeable = chargeable;
         const lookupValue = chargeable;
         let customRate = getRateFromStorage(vendor, lookupValue);
-        
+
         if (isSpecialCheckbox && isSpecialCheckbox.checked) {
             const rates = loadRates();
             if (rates[vendor] && rates[vendor]["special"]) {
@@ -1167,14 +1167,14 @@ function calculateShipping() {
     const exchange = toNum(rateInput?.value) || 1;
     const fuel = baseCost * (toNum(fuelPercentInput?.value) / 100);
     const other = toNum(otherInput?.value);
-    
+
     setIfElement(fuelAmountInput, formatNum(fuel));
-    
+
     const finalCost = (baseCost + fuel + other) * exchange;
 
     if (resultBoxOrigin) resultBoxOrigin.value = formatNum(baseCost);
     if (resultBoxDest) resultBoxDest.value = formatNum(finalCost);
-    
+
     const qty = Math.max(1, toNum(weightQtyInput?.value) || 1);
     setIfElement(pricePerPieceInput, formatNum(finalCost / qty));
 }
@@ -1240,8 +1240,18 @@ document.addEventListener("DOMContentLoaded", () => {
         el.addEventListener('change', saveFormState);
         el.addEventListener('input', saveFormState);
     });
+
     const radioButtons = document.querySelectorAll('input[name="box-option"]');
     radioButtons.forEach(radio => {
         radio.addEventListener('change', () => { updateWeightTotals(); calculateShipping(); saveFormState(); });
     });
+
+    const hamburgerBtn = document.getElementById("hamburger-btn");
+    const navMenu = document.querySelector(".nav-menu");
+
+    if (hamburgerBtn && navMenu) {
+        hamburgerBtn.addEventListener("click", () => {
+            navMenu.classList.toggle("active");
+        });
+    }
 });

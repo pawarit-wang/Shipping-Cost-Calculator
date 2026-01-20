@@ -385,24 +385,97 @@ button:hover {
     cursor: pointer;
 }
 
-/* Responsive: มือถือ */
-@media (max-width: 600px) {
-    .table-actions {
-        flex-direction: column;
-        align-items: stretch;
-        /* ยืดเต็มจอ */
-        gap: 10px;
+/* =========================================
+   Mobile / Responsive Styles
+   ========================================= */
+
+/* ซ่อนปุ่ม Hamburger ในหน้าจอปกติ */
+.hamburger {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+/* --- ปรับแต่งสำหรับมือถือ (หน้าจอเล็กกว่า 768px) --- */
+@media (max-width: 768px) {
+
+    /* 1. ปรับ Navbar ให้มีปุ่มเมนู */
+    .hamburger {
+        display: block;
+        /* แสดงปุ่มขีดๆ */
     }
 
-    .filter-group {
+    .nav-menu {
+        display: none;
+        /* ซ่อนเมนูไว้ก่อน */
         flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
-
-    .filter-group select {
+        position: absolute;
+        top: 56px;
+        /* ความสูง Navbar */
+        left: 0;
         width: 100%;
-        /* เต็มจอในมือถือ */
+        background-color: #0f172a;
+        padding: 15px 0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-menu.active {
+        display: flex;
+        /* แสดงเมื่อกดปุ่ม */
+    }
+
+    .nav-menu li {
+        text-align: center;
+        margin: 10px 0;
+    }
+
+    .lang-switch {
+        justify-content: center;
+        margin-left: 0;
+        margin-top: 10px;
+    }
+
+    /* 2. ปรับ Grid ต่างๆ ให้เรียงเป็นแนวตั้ง */
+    .cards-vertical,
+    .two-col,
+    .three-col,
+    .four-col,
+    .five-col,
+    .six-col,
+    .weight-row {
+        grid-template-columns: 1fr !important;
+        /* บังคับให้เหลือ 1 คอลัมน์ */
+        gap: 15px;
+    }
+
+    /* 3. ปรับตาราง Vendor (ส่วนที่ซับซ้อนที่สุด) */
+    .vendor-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px;
+    }
+
+    /* จัด layout ของ Vendor ใหม่ให้อ่านง่ายขึ้นในมือถือ */
+    .vendor-grid>div {
+        margin-bottom: 5px;
+    }
+
+    /* 4. ปรับปุ่มและ Input ให้กดง่ายขึ้น */
+    input,
+    select,
+    button {
+        height: 44px;
+        /* ความสูงมาตรฐานปุ่มบนมือถือ */
+        font-size: 16px;
+        /* ป้องกัน iOS ซูมเอง */
+    }
+
+    .container {
+        padding: 0 10px;
+        /* ลดขอบข้างให้เนื้อหาเต็มจอขึ้น */
     }
 }
 
@@ -442,17 +515,23 @@ button:hover {
 
 .action-buttons {
     display: flex;
-    gap: 8px;                /* ระยะห่างระหว่างไอคอนกับปุ่ม */
-    justify-content: center; /* จัดกึ่งกลางแนวนอน */
-    align-items: center;     /* จัดกึ่งกลางแนวตั้ง */
-    width: 100%;             /* ขยายเต็มความกว้างของ td */
+    gap: 8px;
+    /* ระยะห่างระหว่างไอคอนกับปุ่ม */
+    justify-content: center;
+    /* จัดกึ่งกลางแนวนอน */
+    align-items: center;
+    /* จัดกึ่งกลางแนวตั้ง */
+    width: 100%;
+    /* ขยายเต็มความกว้างของ td */
     margin: 0;
     padding: 0;
 }
+
 .btn-move {
     width: 24px;
     height: 24px;
-    margin: 0 !important;    /* ล้าง margin เช่นกัน */
+    margin: 0 !important;
+    /* ล้าง margin เช่นกัน */
     padding: 0;
     display: flex;
     align-items: center;
@@ -476,33 +555,44 @@ button:hover {
 
 /* ปรับปุ่มลบให้ขนาดเท่ากันเพื่อความสวยงาม */
 .btn-delete {
-    width: 24px !important;  /* ฟิกซ์ความกว้าง */
-    height: 24px !important; /* ฟิกซ์ความสูง */
+    width: 24px !important;
+    /* ฟิกซ์ความกว้าง */
+    height: 24px !important;
+    /* ฟิกซ์ความสูง */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     padding: 0 !important;
-    
+
     /* *** จุดสำคัญที่แก้ปัญหา *** */
-    margin: 0 !important;    /* ล้าง margin-top: 5px ที่ติดมาจาก Global Button */
-    flex: none;              /* ป้องกันปุ่มบี้ถ้าหน้าจอเล็ก */
+    margin: 0 !important;
+    /* ล้าง margin-top: 5px ที่ติดมาจาก Global Button */
+    flex: none;
+    /* ป้องกันปุ่มบี้ถ้าหน้าจอเล็ก */
 }
 
 /* สไตล์สำหรับ Drag & Drop */
 .drag-handle {
-    width: 24px;             /* ฟิกซ์ความกว้าง */
-    height: 24px;            /* ฟิกซ์ความสูง */
-    display: flex;           /* ใช้ Flex เพื่อจัดตัวหนังสือข้างใน */
-    align-items: center;     /* จัดแนวตั้งในกล่อง */
-    justify-content: center; /* จัดแนวนอนในกล่อง */
-    
+    width: 24px;
+    /* ฟิกซ์ความกว้าง */
+    height: 24px;
+    /* ฟิกซ์ความสูง */
+    display: flex;
+    /* ใช้ Flex เพื่อจัดตัวหนังสือข้างใน */
+    align-items: center;
+    /* จัดแนวตั้งในกล่อง */
+    justify-content: center;
+    /* จัดแนวนอนในกล่อง */
+
     cursor: grab;
     font-size: 1.2rem;
     color: #94a3b8;
     user-select: none;
     line-height: 1;
-    margin: 0;               /* ล้าง margin */
-    padding: 0;              /* ล้าง padding */
+    margin: 0;
+    /* ล้าง margin */
+    padding: 0;
+    /* ล้าง padding */
 }
 
 .drag-handle:active {
