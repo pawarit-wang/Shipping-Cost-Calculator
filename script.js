@@ -399,6 +399,11 @@ const translations = {
 // =============================
 const toNum = (v) => Number.parseFloat(String(v).replace(/,/g, '')) || 0;
 const formatNum = (n, d = 2) => (n === "" || n === undefined || isNaN(n)) ? "" : Number(n).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+
+function setIfElement(el, val) {
+    if (el) el.value = val;
+}
+
 function formatDateTime(d = new Date()) {
     const pad = (x) => String(x).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
@@ -1082,6 +1087,7 @@ function updateVolumes() {
 function calculateShipping() {
     const vendor = vendorSelect?.value || "";
     let finalChargeable = 0;
+    
     if (!vendor) {
         setIfElement(chargeableInput, "");
         if (resultBoxOrigin) resultBoxOrigin.value = "";
@@ -1090,19 +1096,32 @@ function calculateShipping() {
         if (fuelAmountInput) fuelAmountInput.value = "";
         return;
     }
+
     const weightVal = toNum(manualGrossWeightInput?.value) || toNum(totalWeightInput?.value);
     let baseCost = 0;
+
+    // --- ส่วนที่มีการแก้ไข (Logic สำหรับ v01199 ทางเรือ) ---
     if (vendor === 'v01199') {
         updateVolumeFromWeight();
         const valVolWeight = toNum(volumeFromWeightOutput?.value);
-        const valGrandDim = toNum(totalVolumeInput?.value);
+        let valGrandDim = toNum(totalVolumeInput?.value);
+
+        // [แก้ไข]: ถ้า Grand Dimensions (m³) น้อยกว่า 1 ให้ปัดเป็น 1
+        if (valGrandDim < 1) {
+            valGrandDim = 1;
+        }
+
+        // เปรียบเทียบระหว่าง นน.ตามปริมาตร กับ ปริมาตรจริง (ที่ผ่านการปัดเป็น 1 แล้ว)
         const x = Math.max(valVolWeight, valGrandDim);
         finalChargeable = x;
+
         const rates = loadRates();
         const vRates = rates[vendor] || {};
         const a = toNum(vRates["1.0"]);
         const b = toNum(vRates["other"]);
         baseCost = (a * x) + b;
+    // ---------------------------------------------------
+
     } else {
         let calcM3 = toNum(manualTotalVolumeInput?.value) || toNum(totalVolumeInput?.value);
         const totalCm3 = calcM3 * 1_000_000;
@@ -1118,6 +1137,7 @@ function calculateShipping() {
         finalChargeable = chargeable;
         const lookupValue = chargeable;
         let customRate = getRateFromStorage(vendor, lookupValue);
+        
         if (isSpecialCheckbox && isSpecialCheckbox.checked) {
             const rates = loadRates();
             if (rates[vendor] && rates[vendor]["special"]) {
@@ -1125,6 +1145,7 @@ function calculateShipping() {
                 if (specialPrice > 0) customRate = { type: 'per_unit', price: specialPrice };
             }
         }
+
         if (customRate) {
             baseCost = (customRate.type === 'fixed') ? customRate.price : (lookupValue * customRate.price);
         } else {
@@ -1140,14 +1161,20 @@ function calculateShipping() {
             }
         }
     }
-    setIfElement(chargeableInput, formatNum(finalChargeable, 1));
+
+    setIfElement(chargeableInput, formatNum(finalChargeable, 1)); // แสดงผล Chargeable W./Vol.
+
     const exchange = toNum(rateInput?.value) || 1;
     const fuel = baseCost * (toNum(fuelPercentInput?.value) / 100);
     const other = toNum(otherInput?.value);
+    
     setIfElement(fuelAmountInput, formatNum(fuel));
+    
     const finalCost = (baseCost + fuel + other) * exchange;
+
     if (resultBoxOrigin) resultBoxOrigin.value = formatNum(baseCost);
     if (resultBoxDest) resultBoxDest.value = formatNum(finalCost);
+    
     const qty = Math.max(1, toNum(weightQtyInput?.value) || 1);
     setIfElement(pricePerPieceInput, formatNum(finalCost / qty));
 }
