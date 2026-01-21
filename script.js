@@ -539,6 +539,10 @@ function renderHistoryPage(page) {
             if (h.boxOption === 'Include Box') boxText = translations[currentLang].lbl_box_include || "Include Box";
             if (h.boxOption === 'Exclude Box') boxText = translations[currentLang].lbl_box_exclude || "Exclude Box";
 
+            const qty = parseFloat(h.weightQty) || 1;
+            const cost = parseFloat(h.cost) || 0;
+            const pricePerPiece = cost / qty;
+
             const tr = document.createElement("tr");
             tr.innerHTML = `
             <td style="font-size: 0.8rem; color: #64748b; white-space: nowrap;">${timeStr}</td>
@@ -549,9 +553,15 @@ function renderHistoryPage(page) {
             <td>${h.weightUnit || "-"}</td>
             <td class="text-right">${h.netWeight || "-"}</td>
             <td style="font-size: 0.85rem; white-space: nowrap;">${h.netDims || "-"}</td>
-            <td>${h.vendor || "-"}</td>
+            <td>${h.vendor || "-"}</td>     
+            <td>${h.origin || "-"}</td>
+
             <td class="text-right" style="font-weight: bold; color: #059669; white-space: nowrap;">
                 ${h.currency || ""} ${formatNum(h.cost, 2)}
+            </td>
+
+            <td class="text-right" style="font-weight: bold; color: #0369a1; white-space: nowrap;">
+                ${h.currency || ""} ${formatNum(pricePerPiece, 2)}
             </td>
             `;
             historyTableBody.appendChild(tr);
@@ -1088,8 +1098,30 @@ function calculateShipping() {
     const vendor = vendorSelect?.value || "";
     let finalChargeable = 0;
 
+    // เตรียมตัวแปรสำหรับข้อความที่มา
+    let sourceMsg = "";
+    const t = translations[currentLang] || translations['en'];
+    const sourceDiv = document.getElementById("chargeable-source");
+
+    // Element ที่เป็นคู่แข่งกัน (Input Fields)
+    const elTotalWeight = document.getElementById("total-weight");      // Gross Weight
+    const elGrandVolKg = document.getElementById("grand-volume");      // Grand Volume (kg)
+    const elVolFromWt = document.getElementById("Volume");            // Volume from Weight (m3)
+    const elTotalVolM3 = document.getElementById("total-volume");      // Grand Dimensions (m3)
+
+    // ฟังก์ชันช่วยเคลียร์สีเดิมออกก่อนคำนวณใหม่
+    const clearHighlights = () => {
+        [elTotalWeight, elGrandVolKg, elVolFromWt, elTotalVolM3].forEach(el => {
+            if (el) {
+                el.classList.remove("input-winner", "input-loser");
+            }
+        });
+    };
+    clearHighlights();
+
     if (!vendor) {
         setIfElement(chargeableInput, "");
+        if (sourceDiv) sourceDiv.textContent = "";
         if (resultBoxOrigin) resultBoxOrigin.value = "";
         if (resultBoxDest) resultBoxDest.value = "";
         if (pricePerPieceInput) pricePerPieceInput.value = "";
@@ -1100,42 +1132,72 @@ function calculateShipping() {
     const weightVal = toNum(manualGrossWeightInput?.value) || toNum(totalWeightInput?.value);
     let baseCost = 0;
 
-    // --- ส่วนที่มีการแก้ไข (Logic สำหรับ v01199 ทางเรือ) ---
+    // --- CASE 1: Sea (v01199) ---
     if (vendor === 'v01199') {
         updateVolumeFromWeight();
-        const valVolWeight = toNum(volumeFromWeightOutput?.value);
-        let valGrandDim = toNum(totalVolumeInput?.value);
+        const valVolWeight = toNum(volumeFromWeightOutput?.value); // m3 (จากน้ำหนัก)
+        let valGrandDim = toNum(totalVolumeInput?.value);          // m3 (จากขนาด)
 
-        // [แก้ไข]: ถ้า Grand Dimensions (m³) น้อยกว่า 1 ให้ปัดเป็น 1
-        if (valGrandDim < 1) {
-            valGrandDim = 1;
+        if (valGrandDim < 1) valGrandDim = 1;
+
+        // เทียบหาค่ามากสุด
+        let rawMax = Math.max(valVolWeight, valGrandDim);
+
+        // ตรวจสอบที่มา และ ไฮไลท์ช่อง Input
+        if (valVolWeight > valGrandDim) {
+            sourceMsg = t.text_src_weight;
+            // Winner: Volume (m3) ช่องบน, Loser: Grand Dimensions (m3) ช่องล่าง
+            if (elVolFromWt) elVolFromWt.classList.add("input-winner");
+            if (elTotalVolM3) elTotalVolM3.classList.add("input-loser");
+        } else {
+            sourceMsg = t.text_src_vol;
+            // Winner: Grand Dimensions (m3) ช่องล่าง, Loser: Volume (m3) ช่องบน
+            if (elTotalVolM3) elTotalVolM3.classList.add("input-winner");
+            if (elVolFromWt) elVolFromWt.classList.add("input-loser");
         }
 
-        // เปรียบเทียบระหว่าง นน.ตามปริมาตร กับ ปริมาตรจริง (ที่ผ่านการปัดเป็น 1 แล้ว)
-        const x = Math.max(valVolWeight, valGrandDim);
-        finalChargeable = x;
+        // Logic ปัดเศษ 0.5
+        finalChargeable = Math.ceil(rawMax * 2) / 2;
 
         const rates = loadRates();
         const vRates = rates[vendor] || {};
         const a = toNum(vRates["1.0"]);
         const b = toNum(vRates["other"]);
-        baseCost = (a * x) + b;
-        // ---------------------------------------------------
+        baseCost = (a * finalChargeable) + b;
 
+        // --- CASE 2: Air / Land ---
     } else {
         let calcM3 = toNum(manualTotalVolumeInput?.value) || toNum(totalVolumeInput?.value);
         const totalCm3 = calcM3 * 1_000_000;
         let volKg = 0;
-        if (vendor === 'v01198') {
+
+        if (vendor === 'v01198') { // Land
             const multiplier = toNum(volumetricMultiplierInput?.value) || 200;
             volKg = calcM3 * multiplier;
-        } else {
+        } else { // Air
             const divisor = toNum(volumetricDivisorInput?.value) || VOLUMETRIC_DIVISOR;
             if (divisor > 0) volKg = totalCm3 / divisor;
         }
+
+        // เทียบหาค่ามากสุด
         const chargeable = Math.max(weightVal, volKg);
+
+        // ตรวจสอบที่มา และ ไฮไลท์ช่อง Input
+        if (weightVal >= volKg) {
+            sourceMsg = t.text_src_gross;
+            // Winner: Gross Weight, Loser: Grand Volume (kg)
+            if (elTotalWeight) elTotalWeight.classList.add("input-winner");
+            if (elGrandVolKg) elGrandVolKg.classList.add("input-loser");
+        } else {
+            sourceMsg = t.text_src_vol_weight;
+            // Winner: Grand Volume (kg), Loser: Gross Weight
+            if (elGrandVolKg) elGrandVolKg.classList.add("input-winner");
+            if (elTotalWeight) elTotalWeight.classList.add("input-loser");
+        }
+
         finalChargeable = chargeable;
         const lookupValue = chargeable;
+
         let customRate = getRateFromStorage(vendor, lookupValue);
 
         if (isSpecialCheckbox && isSpecialCheckbox.checked) {
@@ -1162,7 +1224,9 @@ function calculateShipping() {
         }
     }
 
-    setIfElement(chargeableInput, formatNum(finalChargeable, 1)); // แสดงผล Chargeable W./Vol.
+    // อัปเดต UI
+    if (sourceDiv) sourceDiv.textContent = sourceMsg;
+    setIfElement(chargeableInput, formatNum(finalChargeable, 1));
 
     const exchange = toNum(rateInput?.value) || 1;
     const fuel = baseCost * (toNum(fuelPercentInput?.value) / 100);

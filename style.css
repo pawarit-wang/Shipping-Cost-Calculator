@@ -663,3 +663,23 @@ tr.drag-over {
     border-bottom: 2px solid #2563eb;
     /* เส้นสีน้ำเงินแสดงตำแหน่งที่จะวาง */
 }
+
+/* =========================================
+   Active / Inactive Input Styles
+   ========================================= */
+
+/* ช่องที่ถูกเลือกมาคำนวณ (Winner) */
+.input-winner {
+    border: 2px solid #22c55e !important;    /* ขอบสีเขียว */
+    background-color: #f0fdf4 !important;    /* พื้นหลังเขียวอ่อน */
+    color: #15803d !important;               /* ตัวหนังสือเขียวเข้ม */
+    font-weight: 700 !important;
+}
+
+/* ช่องที่ไม่ได้ถูกใช้ (Loser) */
+.input-loser {
+    border: 2px solid #ef4444 !important;    /* ขอบสีแดง */
+    background-color: #fef2f2 !important;    /* พื้นหลังแดงอ่อน */
+    color: #b91c1c !important;               /* ตัวหนังสือแดงเข้ม */
+    font-weight: 500 !important;
+}
