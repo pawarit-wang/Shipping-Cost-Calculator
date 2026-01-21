@@ -1295,9 +1295,14 @@ allInputs.forEach(el => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    // 1. ตั้งค่าภาษาเริ่มต้น
     setLanguage(localStorage.getItem(LANG_KEY) || "en");
+
+    // 2. โหลด History และสถานะฟอร์ม
     initRealtimeHistory();
     loadFormState();
+
+    // 3. ป้องกันการลาก Input (Drag & Drop) และบันทึกสถานะเมื่อพิมพ์
     document.querySelectorAll('input, select').forEach(el => {
         el.setAttribute('draggable', 'false');
         el.addEventListener('dragstart', (e) => { e.preventDefault(); });
@@ -1305,11 +1310,17 @@ document.addEventListener("DOMContentLoaded", () => {
         el.addEventListener('input', saveFormState);
     });
 
+    // 4. ฟังชั่น Radio Button (Include/Exclude Box)
     const radioButtons = document.querySelectorAll('input[name="box-option"]');
     radioButtons.forEach(radio => {
-        radio.addEventListener('change', () => { updateWeightTotals(); calculateShipping(); saveFormState(); });
+        radio.addEventListener('change', () => {
+            updateWeightTotals();
+            calculateShipping();
+            saveFormState();
+        });
     });
 
+    // 5. เมนู Hamburger สำหรับมือถือ
     const hamburgerBtn = document.getElementById("hamburger-btn");
     const navMenu = document.querySelector(".nav-menu");
 
@@ -1318,4 +1329,42 @@ document.addEventListener("DOMContentLoaded", () => {
             navMenu.classList.toggle("active");
         });
     }
+
+    // =========================================
+    // 6. [ใหม่] กด Enter เพื่อไปช่องถัดไป
+    // =========================================
+    document.addEventListener("keydown", (e) => {
+        // ทำงานเฉพาะปุ่ม Enter
+        if (e.key !== "Enter") return;
+
+        const target = e.target;
+
+        // เช็คว่าเป็น Input หรือ Select และต้องไม่ใช่ Readonly / ปุ่มกด
+        const isInput = target.tagName === "INPUT" || target.tagName === "SELECT";
+        const isReadOnly = target.hasAttribute("readonly");
+        const isButton = target.type === "button" || target.type === "submit";
+
+        // เงื่อนไข: เป็น Input, ไม่ใช่ Readonly, ไม่ใช่ปุ่ม
+        if (isInput && !isReadOnly && !isButton) {
+            e.preventDefault(); // ป้องกันการ Submit Form
+
+            // ดึงรายการช่องที่กรอกได้ทั้งหมด (ข้ามพวก hidden, readonly, disabled)
+            const focusableElements = Array.from(
+                document.querySelectorAll("input:not([type='hidden']):not([disabled]):not([readonly]), select:not([disabled])")
+            );
+
+            const index = focusableElements.indexOf(target);
+
+            // ถ้าเจอช่องปัจจุบัน และมีช่องถัดไป
+            if (index > -1 && index < focusableElements.length - 1) {
+                const nextElement = focusableElements[index + 1];
+                nextElement.focus();
+
+                // ถ้าเป็นช่องข้อความ ให้เลือกข้อความทั้งหมด (Highlight) เพื่อให้พิมพ์ทับได้เลย
+                if (nextElement.select && nextElement.type !== "checkbox" && nextElement.type !== "radio") {
+                    nextElement.select();
+                }
+            }
+        }
+    });
 });

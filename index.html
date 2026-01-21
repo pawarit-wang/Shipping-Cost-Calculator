@@ -135,9 +135,9 @@
                         <div>
                             <label data-i18n="lbl_gross_dims">Gross Dimensions (cm)</label>
                             <div class="dimension-group">
-                                <input type="text" id="gross-width" placeholder="Width" data-i18n="ph_width" />
-                                <input type="text" id="gross-length" placeholder="Length" data-i18n="ph_length" />
-                                <input type="text" id="gross-height" placeholder="Height" data-i18n="ph_height" />
+                                <input type="text" id="gross-width" placeholder="Width" data-i18n="ph_width" readonly />
+                                <input type="text" id="gross-length" placeholder="Length" data-i18n="ph_length" readonly />
+                                <input type="text" id="gross-height" placeholder="Height" data-i18n="ph_height" readonly />
                             </div>
                         </div>
                     </div>
@@ -310,7 +310,7 @@
                     <!-- <div class="form-group">
                         <button type="button" id="calc-btn" data-i18n="btn_calc">Calculate Shipping Cost</button>
                     </div> -->
-                    
+
                     <div class="form-group" style="margin-top: 20px;">
                         <button type="button" onclick="saveCalculation()"
                             style="background-color: #0f172a; color: white;" data-i18n="btn_save_history">
