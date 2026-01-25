@@ -735,3 +735,238 @@ tr.drag-over {
     font-weight: bold;
     color: #0f172a;
 }
+
+/* =========================================
+   Image Upload Styles (เพิ่มใหม่)
+   ========================================= */
+.input-with-image {
+    display: flex;
+    gap: 8px; /* ระยะห่างระหว่างช่องพิมพ์กับปุ่มรูป */
+    align-items: center;
+}
+
+.input-wrapper-flex {
+    flex: 1; /* ให้ช่องพิมพ์ยืดเต็มพื้นที่ที่เหลือ */
+    position: relative;
+}
+
+.image-upload-container {
+    width: 36px; /* ความสูงเท่ากับ Input ปกติ */
+    height: 36px;
+    flex: none; /* ห้ามยืดหด */
+}
+
+.image-upload-label {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.2s;
+    color: #64748b;
+}
+
+.image-upload-label:hover {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+    color: #3b82f6;
+}
+
+.image-upload-label svg {
+    width: 20px;
+    height: 20px;
+}
+
+#image-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ให้รูปเต็มกล่องโดยไม่เสียสัดส่วน */
+    display: block;
+}
+
+/* ซ่อน Input File ของจริง */
+.hidden-input {
+    display: none;
+}
+
+/* =========================================
+   History Image Styles
+   ========================================= */
+
+/* รูป thumbnail ในตาราง */
+.history-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: transform 0.2s;
+    background: #fff;
+}
+
+.history-thumb:hover {
+    transform: scale(1.1);
+    border-color: #3b82f6;
+}
+
+/* Modal สำหรับดูรูปใหญ่ */
+.modal-overlay {
+    position: fixed;
+    z-index: 2000;
+    padding-top: 50px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    animation: zoom 0.3s;
+}
+
+@keyframes zoom {
+    from {transform:scale(0)} 
+    to {transform:scale(1)}
+}
+
+.close-modal {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* =========================================
+   Zoom Controls & Modal Updates
+   ========================================= */
+
+/* ปรับ Overlay ให้รองรับการเลื่อนถ้ารูปใหญ่เกิน */
+.modal-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* ซ่อน Scrollbar ของตัว Overlay หลัก */
+}
+
+/* Wrapper เพื่อคุมพื้นที่รูปภาพ */
+.modal-image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto; /* ถ้าซูมใหญ่มาก ให้เลื่อนดูได้ */
+}
+
+/* ปรับปรุงรูปใน Modal ให้รองรับ Zoom */
+.modal-content {
+    max-width: 90%;
+    max-height: 90%;
+    transition: transform 0.2s ease-out; /* ซูมลื่นๆ */
+    cursor: grab; /* เปลี่ยนเมาส์เป็นรูปมือจับ */
+    transform-origin: center center;
+}
+
+/* แถบปุ่มควบคุมการซูม */
+.zoom-controls {
+    position: absolute;
+    bottom: 80px; /* <<< แก้ตรงนี้ครับ ยิ่งเลขมาก ยิ่งสูงขึ้น (ของเดิม 30px) */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 10px 20px;
+    border-radius: 30px;
+    display: flex;
+    gap: 15px;
+    z-index: 2001;
+}
+
+.zoom-controls button {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0; /* ล้างค่าเดิม */
+    transition: all 0.2s;
+}
+
+.zoom-controls button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
+    transform: scale(1.1);
+}
+
+/* ปรับปุ่มปิด (Close) ให้ชัดขึ้น */
+.close-modal {
+    z-index: 2002; /* ให้อยู่เหนือปุ่มซูม */
+    background: rgba(0, 0, 0, 0.5);
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+    border-radius: 50%;
+}
+
+/* =========================================
+   Export PDF Button
+   ========================================= */
+.btn-export-pdf {
+    background-color: #ef4444; /* สีแดง */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: auto; /* ไม่ให้เต็มจอเหมือนปุ่มอื่น */
+    transition: background-color 0.2s;
+    margin-top: 0;
+}
+
+.btn-export-pdf:hover {
+    background-color: #dc2626;
+}
+
+.btn-export-pdf svg {
+    width: 18px;
+    height: 18px;
+}

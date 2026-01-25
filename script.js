@@ -99,6 +99,10 @@ const fuelAmountInput = document.getElementById("fuel-amount");
 const otherInput = document.getElementById("other-charges");
 const isSpecialCheckbox = document.getElementById("is-special");
 
+const partImageInput = document.getElementById("part-image-input");
+const imagePreview = document.getElementById("image-preview");
+const cameraIcon = document.getElementById("camera-icon");
+
 const historyTableBody = document.getElementById("history-body");
 
 const btnEn = document.getElementById("lang-en");
@@ -209,6 +213,7 @@ const translations = {
         col_net_weight: "Net W. (kg)",
         col_net_dims: "Net Dims (cm)",
         col_dims_qty: "Dims Qty",
+        col_img: "Image",
         msg_loading: "Loading data from cloud...",
         msg_no_history: "No history found."
     },
@@ -304,6 +309,7 @@ const translations = {
         col_net_weight: "น้ำหนักสุทธิ (kg)",
         col_net_dims: "ขนาดสุทธิ (cm)",
         col_dims_qty: "จำนวน (Dims)",
+        col_img: "รูปภาพ",
         msg_loading: "กำลังโหลดข้อมูล...",
         msg_no_history: "ไม่พบประวัติการคำนวณ"
     },
@@ -399,6 +405,7 @@ const translations = {
         col_net_weight: "净重 (kg)",
         col_net_dims: "净尺寸 (cm)",
         col_dims_qty: "尺寸数量",
+        col_img: "图片",
         msg_loading: "正在加载数据...",
         msg_no_history: "未找到历史记录"
     }
@@ -459,8 +466,16 @@ window.saveCalculation = async function () {
     const nh = document.getElementById("net-height").value || 0;
     const netDimsStr = `${nw} x ${nl} x ${nh}`;
 
+    const imgPreview = document.getElementById("image-preview");
+    let imageData = "";
+    // เช็คว่ามีรูปจริงหรือไม่ (ต้องขึ้นต้นด้วย data:image)
+    if (imgPreview && !imgPreview.classList.contains("hidden") && imgPreview.src.startsWith("data:image")) {
+        imageData = imgPreview.src;
+    }
+
     const entry = {
         timestamp: new Date(),
+        partImage: imageData,
         origin: document.getElementById("origin-country").value,
         destination: document.getElementById("destination-country").value,
         vendor: document.getElementById("vendor").value,
@@ -554,6 +569,12 @@ function renderHistoryPage(page) {
             const cost = parseFloat(h.cost) || 0;
             const pricePerPiece = cost / qty;
 
+            let imgHtml = `<span style="color:#ccc;">-</span>`;
+            if (h.partImage) {
+                // สร้างรูปย่อ และใส่ onclick เพื่อเปิดดูรูปใหญ่
+                imgHtml = `<img src="${h.partImage}" class="history-thumb" onclick="viewHistoryImage('${h.partImage}')" alt="img">`;
+            }
+
             const tr = document.createElement("tr");
             tr.innerHTML = `
             <td style="font-size: 0.8rem; color: #64748b; white-space: nowrap;">${timeStr}</td>
@@ -575,6 +596,8 @@ function renderHistoryPage(page) {
             <td class="text-right" style="font-weight: bold; color: #0369a1; white-space: nowrap;">
                 ${h.currency || ""} ${formatNum(pricePerPiece, 2)}
             </td>
+
+            <td class="text-center">${imgHtml}</td>
             `;
             historyTableBody.appendChild(tr);
         });
@@ -624,34 +647,35 @@ window.clearFormData = function () {
 
     // 2. ล้างค่าใน Input และ Select ส่วนใหญ่
     document.querySelectorAll('input, select').forEach(el => {
-        // ข้ามปุ่มกด, Radio, และช่อง Unit (เราจะจัดการ Unit แยกต่างหากใน Step 3)
         if (el.type === 'button' || el.type === 'submit' || el.type === 'radio' || el.id === 'dimension-unit') return;
 
-        // คืนค่า Default ให้กับตัวหารและตัวคูณ
         if (el.id === 'volumetric-divisor') el.value = "500";
         else if (el.id === 'volumetric-multiplier') el.value = "200";
-        else el.value = ""; // ค่าอื่นๆ ให้เป็นว่าง
+        else el.value = "";
     });
 
-    // 3. จัดการช่อง Unit (แบบเจาะจง)
+    // 3. จัดการช่อง Unit
     const unitEl = document.getElementById('dimension-unit');
     if (unitEl) {
         if (unitEl.tagName === 'SELECT') {
-            // ถ้ายังเป็น Dropdown ให้เลือกค่า "box" (ตัวพิมพ์เล็ก ตามค่าใน HTML option value)
             unitEl.value = "box";
         } else {
-            // ถ้าเป็น Input Text (พิมพ์เองได้) ให้ใส่คำว่า "Box" หรือ "กล่อง" (ตามภาษาที่เลือก)
             unitEl.value = translations[currentLang].unit_box || "Box";
         }
     }
 
-    // 4. รีเซ็ต Radio Button (Box Option)
+    // 4. รีเซ็ต Radio Button
     const boxExclude = document.getElementById("box-exclude");
     if (boxExclude) boxExclude.checked = true;
 
-    // 5. รีเซ็ต Checkbox (Special)
+    // 5. รีเซ็ต Checkbox
     const isSpecial = document.getElementById("is-special");
     if (isSpecial) isSpecial.checked = false;
+
+    // +++ เพิ่มส่วนนี้: ล้างรูปภาพ +++
+    if (partImageInput) partImageInput.value = ""; // ล้างไฟล์ใน input
+    showImagePreview(null); // ซ่อนรูป preview
+    // +++ จบส่วนที่เพิ่ม +++
 
     // 6. ลบ Session Storage และคำนวณใหม่
     sessionStorage.removeItem(FORM_STATE_KEY);
@@ -1026,9 +1050,10 @@ function loadFormState() {
     if (!raw) return;
     const state = JSON.parse(raw);
     for (const id in state) {
-
-        // +++ เพิ่มบรรทัดนี้ครับ: ถ้าเจอค่าเก่าของ vendor-select ก็ข้ามไปเลย ไม่ต้องโหลด +++
         if (id === 'vendor-select') continue;
+
+        // ข้ามข้อมูลรูปภาพใน loop นี้ (เราจัดการแยกด้านล่าง)
+        if (id === 'part-image-data') continue;
 
         const el = document.getElementById(id);
         if (el) {
@@ -1036,6 +1061,12 @@ function loadFormState() {
             else el.value = state[id];
         }
     }
+
+    // +++ เพิ่มส่วนนี้: โหลดรูปภาพกลับมาแสดง +++
+    if (state['part-image-data']) {
+        showImagePreview(state['part-image-data']);
+    }
+    // +++ จบส่วนที่เพิ่ม +++
 
     updateWeightTotals();
     updateGrossDimensions();
@@ -1365,7 +1396,7 @@ allInputs.forEach(el => {
 });
 
 // =========================================
-// [เพิ่มใหม่] ฟังก์ชันค้นหา Part Number และเติมข้อมูล
+// [แก้ไข] ฟังก์ชันค้นหา Part Number และเติมข้อมูล
 // =========================================
 async function searchAndFillByPartNumber() {
     const partNumberInput = document.getElementById("part-number");
@@ -1380,12 +1411,11 @@ async function searchAndFillByPartNumber() {
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            // กรณีไม่เจอข้อมูล (อาจจะ console.log ไว้เงียบๆ หรือแจ้งเตือนก็ได้)
             console.log("No history found for this Part Number.");
             return;
         }
 
-        // 2. หาข้อมูลล่าสุด (เนื่องจากเราไม่ได้ทำ Index แบบละเอียด ให้ดึงมาทั้งหมดแล้ว Sort ใน JS)
+        // 2. หาข้อมูลล่าสุด
         let docs = [];
         querySnapshot.forEach((doc) => {
             docs.push(doc.data());
@@ -1400,15 +1430,9 @@ async function searchAndFillByPartNumber() {
 
         const latestData = docs[0];
 
-        // 3. ถามยืนยันผู้ใช้ก่อนเขียนทับข้อมูล (เพื่อป้องกันการเผลอ)
-        const t = translations[currentLang];
-        const confirmMsg = currentLang === 'th' ? `พบประวัติของ Part No. "${pNum}"\nต้องการโหลดข้อมูลล่าสุดหรือไม่?` :
-            currentLang === 'cn' ? `找到部件号 "${pNum}" 的历史记录。\n是否加载最新数据？` :
-                `History found for Part No. "${pNum}".\nDo you want to load the latest data?`;
-
-        if (confirm(confirmMsg)) {
-            fillFormWithData(latestData);
-        }
+        // 3. เติมข้อมูลลงฟอร์มทันที (Uncommented & Active)
+        console.log("Found data, filling form...", latestData); // เช็คใน Console
+        fillFormWithData(latestData);
 
     } catch (error) {
         console.error("Error searching part number:", error);
@@ -1529,14 +1553,13 @@ function renderSuggestions(list) {
     suggestionBox.classList.remove("hidden");
 }
 
-// ฟังก์ชันช่วยเติมข้อมูลลงฟอร์ม
+// ฟังก์ชันช่วยเติมข้อมูลลงฟอร์ม (รวมถึงรูปภาพ)
 function fillFormWithData(data) {
     // 1. General Info
     if (data.goodsName) document.getElementById("goods-name").value = data.goodsName;
     if (data.origin) document.getElementById("origin-country").value = data.origin;
     if (data.destination) {
         document.getElementById("destination-country").value = data.destination;
-        // อัปเดต Rate ตามประเทศปลายทาง
         if (document.getElementById("rate")) document.getElementById("rate").value = getRateByDestination(data.destination);
     }
 
@@ -1545,6 +1568,7 @@ function fillFormWithData(data) {
 
     // 3. Box Option
     if (data.boxOption) {
+        // รองรับทั้งค่าแบบ Text เก่าและ value ใหม่
         if (data.boxOption === 'Include Box' || data.boxOption === 'include') {
             document.getElementById("box-include").checked = true;
         } else {
@@ -1557,7 +1581,7 @@ function fillFormWithData(data) {
     if (data.weightQty) document.getElementById("weight-qty").value = data.weightQty;
     if (data.weightUnit) document.getElementById("weight-unit").value = data.weightUnit;
 
-    // 5. Dimensions
+    // 5. Dimensions (แยก string "WxLxH" กลับเป็นช่องๆ)
     if (data.netDims) {
         const parts = data.netDims.split("x").map(s => s.trim());
         if (parts.length === 3) {
@@ -1567,14 +1591,94 @@ function fillFormWithData(data) {
         }
     }
 
-    // 6. Dims Qty & Unit
+    // 6. Dims Qty
     if (data.dimsQty) document.getElementById("dimension-qty").value = data.dimsQty;
 
-    // 7. คำนวณใหม่ทั้งหมด
+    // ==================================================
+    // 7. ส่วนจัดการรูปภาพ (Image Handling) - แก้ไขล่าสุด
+    // ==================================================
+    const imgPreview = document.getElementById("image-preview");
+    const cameraIcon = document.getElementById("camera-icon");
+    const partImageInput = document.getElementById("part-image-input");
+
+    if (data.partImage) {
+        // กรณีมีรูปใน History: ให้แสดงรูปและซ่อนไอคอนกล้อง
+        if (imgPreview) {
+            imgPreview.src = data.partImage;
+            imgPreview.classList.remove("hidden");
+        }
+        if (cameraIcon) cameraIcon.classList.add("hidden");
+
+        // บันทึกลง Session Storage (เพื่อให้รูปอยู่ต่อ ถ้าเผลอ Refresh หน้า)
+        try {
+            let state = JSON.parse(sessionStorage.getItem(FORM_STATE_KEY) || "{}");
+            state['part-image-data'] = data.partImage;
+            sessionStorage.setItem(FORM_STATE_KEY, JSON.stringify(state));
+        } catch (err) {
+            console.log("Storage error", err);
+        }
+
+    } else {
+        // กรณีไม่มีรูปใน History: ให้เคลียร์รูปเก่าออก (ถ้ามี) เพื่อไม่ให้สับสน
+        if (imgPreview) {
+            imgPreview.src = "";
+            imgPreview.classList.add("hidden");
+        }
+        if (cameraIcon) cameraIcon.classList.remove("hidden");
+        if (partImageInput) partImageInput.value = ""; // ล้างค่าไฟล์ input
+
+        // ลบออกจาก Session Storage ด้วย
+        try {
+            let state = JSON.parse(sessionStorage.getItem(FORM_STATE_KEY) || "{}");
+            delete state['part-image-data'];
+            sessionStorage.setItem(FORM_STATE_KEY, JSON.stringify(state));
+        } catch (err) { }
+    }
+    // ==================================================
+
+    // 8. สั่งคำนวณตัวเลขใหม่ทั้งหมดตามข้อมูลที่เพิ่งใส่
     updateWeightTotals();
     updateGrossDimensions();
     calculateShipping();
     updateCostLabels();
+}
+
+// =============================
+// Image Upload Handling
+// =============================
+function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const base64String = event.target.result;
+
+            // แสดงรูป
+            showImagePreview(base64String);
+
+            // บันทึกลง Session Storage (เพื่อให้รูปอยู่ต่อ แม้ Refresh หน้า)
+            try {
+                let state = JSON.parse(sessionStorage.getItem(FORM_STATE_KEY) || "{}");
+                state['part-image-data'] = base64String;
+                sessionStorage.setItem(FORM_STATE_KEY, JSON.stringify(state));
+            } catch (err) {
+                console.log("Storage full or error", err);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function showImagePreview(src) {
+    if (src) {
+        imagePreview.src = src;
+        imagePreview.classList.remove("hidden");
+        cameraIcon.classList.add("hidden");
+    } else {
+        imagePreview.src = "";
+        imagePreview.classList.add("hidden");
+        cameraIcon.classList.remove("hidden");
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1585,7 +1689,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initRealtimeHistory();
     loadFormState();
 
-    // 3. ป้องกันการลาก Input (Drag & Drop) และบันทึกสถานะเมื่อพิมพ์
+    // 3. ป้องกันการลาก Input และบันทึกสถานะ
     document.querySelectorAll('input, select').forEach(el => {
         el.setAttribute('draggable', 'false');
         el.addEventListener('dragstart', (e) => { e.preventDefault(); });
@@ -1593,7 +1697,7 @@ document.addEventListener("DOMContentLoaded", () => {
         el.addEventListener('input', saveFormState);
     });
 
-    // 4. ฟังชั่น Radio Button (Include/Exclude Box)
+    // 4. ฟังชั่น Radio Button
     const radioButtons = document.querySelectorAll('input[name="box-option"]');
     radioButtons.forEach(radio => {
         radio.addEventListener('change', () => {
@@ -1603,7 +1707,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 5. เมนู Hamburger สำหรับมือถือ
+    // 5. เมนู Hamburger
     const hamburgerBtn = document.getElementById("hamburger-btn");
     const navMenu = document.querySelector(".nav-menu");
 
@@ -1613,44 +1717,40 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 6. [เพิ่มใหม่] เชื่อมต่อฟังก์ชันค้นหา Part Number (เมื่อกด Enter หรือคลิกออก)
+    // 6. เชื่อมต่อฟังก์ชันค้นหา Part Number
     const partNumberInput = document.getElementById("part-number");
     if (partNumberInput) {
         partNumberInput.addEventListener("change", searchAndFillByPartNumber);
     }
 
-    // 7. [เพิ่มใหม่] เริ่มระบบ Autocomplete (Google Style)
+    // 7. เริ่มระบบ Autocomplete
     setupPartNumberAutocomplete();
 
-    // 8. กด Enter เพื่อไปช่องถัดไป (Enter Key Navigation)
+    // +++ เพิ่มส่วนนี้: Event Listener สำหรับการอัปโหลดรูป +++
+    if (partImageInput) {
+        partImageInput.addEventListener("change", handleImageUpload);
+    }
+    // +++ จบส่วนที่เพิ่ม +++
+
+    // 8. กด Enter เพื่อไปช่องถัดไป
     document.addEventListener("keydown", (e) => {
-        // ทำงานเฉพาะปุ่ม Enter
         if (e.key !== "Enter") return;
 
         const target = e.target;
-
-        // เช็คว่าเป็น Input หรือ Select และต้องไม่ใช่ Readonly / ปุ่มกด
         const isInput = target.tagName === "INPUT" || target.tagName === "SELECT";
         const isReadOnly = target.hasAttribute("readonly");
         const isButton = target.type === "button" || target.type === "submit";
 
-        // เงื่อนไข: เป็น Input, ไม่ใช่ Readonly, ไม่ใช่ปุ่ม
         if (isInput && !isReadOnly && !isButton) {
-            e.preventDefault(); // ป้องกันการ Submit Form
-
-            // ดึงรายการช่องที่กรอกได้ทั้งหมด (ข้ามพวก hidden, readonly, disabled)
+            e.preventDefault();
             const focusableElements = Array.from(
                 document.querySelectorAll("input:not([type='hidden']):not([disabled]):not([readonly]), select:not([disabled])")
             );
 
             const index = focusableElements.indexOf(target);
-
-            // ถ้าเจอช่องปัจจุบัน และมีช่องถัดไป
             if (index > -1 && index < focusableElements.length - 1) {
                 const nextElement = focusableElements[index + 1];
                 nextElement.focus();
-
-                // ถ้าเป็นช่องข้อความ ให้เลือกข้อความทั้งหมด (Highlight) เพื่อให้พิมพ์ทับได้เลย
                 if (nextElement.select && nextElement.type !== "checkbox" && nextElement.type !== "radio") {
                     nextElement.select();
                 }
@@ -1658,3 +1758,174 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+// =============================
+// Image Viewer Logic (With Zoom)
+// =============================
+let currentZoom = 1;
+
+window.viewHistoryImage = function (src) {
+    const modal = document.getElementById("image-modal");
+    const modalImg = document.getElementById("modal-img");
+
+    if (modal && modalImg) {
+        modalImg.src = src;
+        modal.classList.remove("hidden");
+
+        // รีเซ็ตค่าซูมทุกครั้งที่เปิดรูปใหม่
+        currentZoom = 1;
+        updateImageZoom();
+    }
+};
+
+window.closeImageModal = function () {
+    const modal = document.getElementById("image-modal");
+    if (modal) modal.classList.add("hidden");
+};
+
+window.adjustZoom = function (delta) {
+    currentZoom += delta;
+
+    // จำกัดการซูม (ต่ำสุด 0.5x, สูงสุด 5x)
+    if (currentZoom < 0.5) currentZoom = 0.5;
+    if (currentZoom > 5.0) currentZoom = 5.0;
+
+    updateImageZoom();
+};
+
+window.resetZoom = function () {
+    currentZoom = 1;
+    updateImageZoom();
+};
+
+function updateImageZoom() {
+    const img = document.getElementById("modal-img");
+    if (img) {
+        img.style.transform = `scale(${currentZoom})`;
+    }
+}
+
+// เพิ่มฟังก์ชันใช้ Mouse Wheel หมุนเพื่อซูม
+document.addEventListener("DOMContentLoaded", () => {
+    // ... (Existing DOMContentLoaded code) ...
+
+    // หา element รูปภาพใน Modal เพื่อดักจับ Mouse Wheel
+    const modalImg = document.getElementById("modal-img");
+    if (modalImg) {
+        modalImg.addEventListener("wheel", function (e) {
+            e.preventDefault(); // ป้องกันหน้าเว็บเลื่อน
+
+            // ถ้าหมุนขึ้น (deltaY < 0) ให้ซูมเข้า, หมุนลงให้ซูมออก
+            const delta = e.deltaY < 0 ? 0.1 : -0.1;
+            window.adjustZoom(delta);
+        });
+    }
+});
+
+// =============================
+// Export PDF Logic
+// =============================
+window.exportHistoryToPDF = function () {
+    // ตรวจสอบว่ามี Library หรือไม่
+    const { jsPDF } = window.jspdf;
+    if (!jsPDF) {
+        alert("PDF Library not loaded yet. Please refresh.");
+        return;
+    }
+
+    // สร้าง PDF แนวนอน (Landscape) เพื่อให้มีที่พอสำหรับคอลัมน์เยอะๆ
+    const doc = new jsPDF('l', 'mm', 'a4');
+
+    // 1. หัวกระดาษ
+    doc.setFontSize(16);
+    doc.text("Shipping Cost History Report", 14, 15);
+
+    doc.setFontSize(10);
+    const dateStr = new Date().toLocaleString();
+    doc.text(`Exported on: ${dateStr}`, 14, 22);
+
+    // 2. เตรียมข้อมูล (ดึงจาก allHistoryDocs ที่เราโหลดมาจาก Firebase)
+    // หมายเหตุ: allHistoryDocs คือตัวแปร Global ในไฟล์นี้ที่คุณมีอยู่แล้ว
+    if (!allHistoryDocs || allHistoryDocs.length === 0) {
+        alert("No data to export!");
+        return;
+    }
+
+    // 3. กำหนดหัวตาราง
+    const head = [[
+        "Date/Time",
+        "Part No.",
+        "Goods Name",
+        "Box Option",
+        "Qty",
+        "N.W (kg)",
+        "Vendor",
+        "Origin -> Dest",
+        "Cost",
+        "Price/Pc"
+    ]];
+
+    // 4. แปลงข้อมูลลงแถว
+    const body = allHistoryDocs.map(h => {
+        // แปลงเวลา
+        const timeStr = h.timestamp && h.timestamp.toDate ?
+            formatDateTime(h.timestamp.toDate()) : (h.time || "-");
+
+        // แปลง Box Option เป็นข้อความสั้นๆ
+        let boxTxt = "Ex";
+        if (h.boxOption && (h.boxOption.includes('Include') || h.boxOption === 'include')) boxTxt = "In";
+
+        // คำนวณราคาต่อชิ้น
+        const costVal = parseFloat(h.cost) || 0;
+        const qtyVal = parseFloat(String(h.weightQty).replace(/,/g, '')) || 1;
+        const pricePerPiece = costVal / qtyVal;
+
+        // จัดรูปแบบประเทศ Origin -> Dest
+        const route = `${getCountryShort(h.origin)} -> ${getCountryShort(h.destination)}`;
+
+        return [
+            timeStr,
+            h.partNumber || "-",
+            h.goodsName || "-",
+            boxTxt,
+            h.weightQty || "-",
+            h.netWeight || "-",
+            h.vendor || "-",
+            route,
+            formatNum(costVal),
+            formatNum(pricePerPiece)
+        ];
+    });
+
+    // 5. สร้างตารางอัตโนมัติ
+    doc.autoTable({
+        head: head,
+        body: body,
+        startY: 30,
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [15, 23, 42] }, // สีหัวตาราง (Dark Slate)
+        alternateRowStyles: { fillColor: [248, 250, 252] }, // สีสลับแถว
+        columnStyles: {
+            0: { cellWidth: 35 }, // Date
+            1: { cellWidth: 30 }, // Part No
+            2: { cellWidth: 35 }, // Goods Name
+            // ปรับขนาดคอลัมน์อื่นๆ ตามความเหมาะสม
+            8: { halign: 'right' }, // Cost ชิดขวา
+            9: { halign: 'right' }  // Price/Pc ชิดขวา
+        }
+    });
+
+    // 6. บันทึกไฟล์
+    doc.save("shipping_history.pdf");
+};
+
+// ฟังก์ชันช่วยย่อชื่อประเทศให้สั้นลงใน PDF
+function getCountryShort(c) {
+    if (!c) return "-";
+    if (c === 'china') return 'CN';
+    if (c === 'thailand') return 'TH';
+    if (c === 'usa') return 'US';
+    if (c === 'japan') return 'JP';
+    if (c === 'germany') return 'DE';
+    return c.toUpperCase().substring(0, 3);
+}

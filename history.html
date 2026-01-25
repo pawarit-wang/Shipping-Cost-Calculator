@@ -160,7 +160,21 @@
     </nav>
 
     <div class="container">
-        <h1 data-i18n="nav_history">Transaction History</h1>
+        <div class="page-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 data-i18n="nav_history" style="margin: 0;">Transaction History</h1>
+            <button class="btn-export-pdf" onclick="exportHistoryToPDF()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Export PDF
+            </button>
+        </div>
 
         <div class="card">
             <div class="table-scroll-container">
@@ -178,8 +192,9 @@
                             <th data-i18n="col_dims_qty">Dims Qty</th>
                             <th data-i18n="lbl_vendor">Vendor</th>
                             <th data-i18n="lbl_origin">Origin</th>
-                            <th class="text-right" data-i18n="lbl_shipping_cost">Cost</th>
-                            <th class="text-right" data-i18n="lbl_price_per_piece">Price / Piece</th>
+                            <th class="text-center" data-i18n="lbl_shipping_cost">Cost</th>
+                            <th class="text-center" data-i18n="lbl_price_per_piece">Price / Piece</th>
+                            <th style="width: 50px;" data-i18n="col_img">Image</th>
                         </tr>
                     </thead>
                     <tbody id="history-body">
@@ -195,6 +210,25 @@
             <div id="pagination-controls" class="pagination"></div>
         </div>
     </div>
+
+    <div id="image-modal" class="modal-overlay hidden">
+
+        <span class="close-modal" onclick="closeImageModal()">&times;</span>
+
+        <div class="modal-image-wrapper">
+            <img class="modal-content" id="modal-img">
+        </div>
+
+        <div class="zoom-controls">
+            <button type="button" onclick="adjustZoom(-0.2)" title="Zoom Out">−</button>
+            <button type="button" onclick="resetZoom()" title="Reset">⟲</button>
+            <button type="button" onclick="adjustZoom(0.2)" title="Zoom In">+</button>
+        </div>
+
+    </div> ```
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
     <script type="module" src="script.js"></script>
 </body>
