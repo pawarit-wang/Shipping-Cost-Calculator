@@ -136,8 +136,10 @@
                             <label data-i18n="lbl_gross_dims">Gross Dimensions (cm)</label>
                             <div class="dimension-group">
                                 <input type="text" id="gross-width" placeholder="Width" data-i18n="ph_width" readonly />
-                                <input type="text" id="gross-length" placeholder="Length" data-i18n="ph_length" readonly />
-                                <input type="text" id="gross-height" placeholder="Height" data-i18n="ph_height" readonly />
+                                <input type="text" id="gross-length" placeholder="Length" data-i18n="ph_length"
+                                    readonly />
+                                <input type="text" id="gross-height" placeholder="Height" data-i18n="ph_height"
+                                    readonly />
                             </div>
                         </div>
                     </div>
@@ -213,19 +215,11 @@
                         </div>
                         <div>
                             <label for="part-number" data-i18n="lbl_part_number">Part Number</label>
-                            <input type="text" id="part-number" name="part-number" />
-                        </div>
-                        <!-- <div>
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
-                                <label for="hs-code" data-i18n="lbl_hs_code" style="margin-bottom: 0;">HS Code</label>
-
-                                <a href="https://e-tracking.customs.go.th/ETS/index.jsp" target="_blank"
-                                    class="search-link" style="margin-left: 0; font-weight: normal;"
-                                    data-i18n="btn_search">Search</a>
+                            <div style="position: relative;">
+                                <input type="text" id="part-number" name="part-number" autocomplete="off" />
+                                <ul id="suggestion-box" class="suggestion-list hidden"></ul>
                             </div>
-
-                            <input type="text" id="hs-code" name="hs-code" />
-                        </div> -->
+                        </div>
                     </div>
 
                     <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
@@ -246,10 +240,10 @@
                                     <option value="sf">SF</option>
                                 </optgroup>
                                 <optgroup label="Sea">
-                                    <option value="v01199">v01199</option>
+                                    <option value="v01199">V 01-199</option>
                                 </optgroup>
                                 <optgroup label="Land">
-                                    <option value="v01198">v01198</option>
+                                    <option value="v01198">V 01-198</option>
                                 </optgroup>
                             </select>
 
@@ -307,14 +301,15 @@
                         </div>
                     </div>
 
-                    <!-- <div class="form-group">
-                        <button type="button" id="calc-btn" data-i18n="btn_calc">Calculate Shipping Cost</button>
-                    </div> -->
-
-                    <div class="form-group" style="margin-top: 20px;">
+                    <div class="form-group" style="margin-top: 20px; display: flex; gap: 10px;">
                         <button type="button" onclick="saveCalculation()"
-                            style="background-color: #0f172a; color: white;" data-i18n="btn_save_history">
+                            style="background-color: #0f172a; color: white; flex: 1;" data-i18n="btn_save_history">
                             Save to History
+                        </button>
+
+                        <button type="button" onclick="clearFormData()"
+                            style="background-color: #ef4444; color: white; flex: 1;" data-i18n="btn_clear">
+                            Clear Data
                         </button>
                     </div>
                 </section>

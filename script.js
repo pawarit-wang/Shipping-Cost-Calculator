@@ -14,7 +14,11 @@ import {
     query,
     orderBy,
     limit,
-    onSnapshot
+    onSnapshot,
+    getDocs,
+    where,
+    startAt,
+    endAt
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -181,6 +185,7 @@ const translations = {
         text_origin: "Origin",
         text_dest: "Destination",
         btn_save_history: "Save to History",
+        btn_clear: "Clear Data",
 
         // Table Page
         lbl_transport_type: "Transport Type:",
@@ -203,6 +208,7 @@ const translations = {
         col_unit: "Unit",
         col_net_weight: "Net W. (kg)",
         col_net_dims: "Net Dims (cm)",
+        col_dims_qty: "Dims Qty",
         msg_loading: "Loading data from cloud...",
         msg_no_history: "No history found."
     },
@@ -273,6 +279,7 @@ const translations = {
         text_origin: "ต้นทาง",
         text_dest: "ปลายทาง",
         btn_save_history: "บันทึกประวัติ",
+        btn_clear: "ล้างข้อมูล",
 
         // Table Page
         lbl_transport_type: "ประเภทการขนส่ง:",
@@ -296,6 +303,7 @@ const translations = {
         col_unit: "หน่วย",
         col_net_weight: "น้ำหนักสุทธิ (kg)",
         col_net_dims: "ขนาดสุทธิ (cm)",
+        col_dims_qty: "จำนวน (Dims)",
         msg_loading: "กำลังโหลดข้อมูล...",
         msg_no_history: "ไม่พบประวัติการคำนวณ"
     },
@@ -366,6 +374,7 @@ const translations = {
         text_origin: "原产地",
         text_dest: "目的地",
         btn_save_history: "保存到历史记录",
+        btn_clear: "清除数据",
 
         // Table Page
         lbl_transport_type: "运输类型:",
@@ -389,6 +398,7 @@ const translations = {
         col_unit: "单位",
         col_net_weight: "净重 (kg)",
         col_net_dims: "净尺寸 (cm)",
+        col_dims_qty: "尺寸数量",
         msg_loading: "正在加载数据...",
         msg_no_history: "未找到历史记录"
     }
@@ -459,6 +469,7 @@ window.saveCalculation = async function () {
         boxOption: boxOption === 'include' ? 'Include Box' : 'Exclude Box',
         weightQty: document.getElementById("weight-qty").value,
         weightUnit: document.getElementById("weight-unit").value,
+        dimsQty: document.getElementById("dimension-qty").value,
         netWeight: document.getElementById("net-weight").value,
         netDims: netDimsStr,
         actualKg: document.getElementById("manual-gross-weight")?.value || document.getElementById("total-weight").value,
@@ -539,7 +550,7 @@ function renderHistoryPage(page) {
             if (h.boxOption === 'Include Box') boxText = translations[currentLang].lbl_box_include || "Include Box";
             if (h.boxOption === 'Exclude Box') boxText = translations[currentLang].lbl_box_exclude || "Exclude Box";
 
-            const qty = parseFloat(h.weightQty) || 1;
+            const qty = parseFloat(String(h.weightQty).replace(/,/g, '')) || 1;
             const cost = parseFloat(h.cost) || 0;
             const pricePerPiece = cost / qty;
 
@@ -549,11 +560,12 @@ function renderHistoryPage(page) {
             <td>${h.partNumber || "-"}</td>
             <td>${h.goodsName || "-"}</td>
             <td>${boxText}</td>
-            <td class="text-right">${h.weightQty || "-"}</td>
+            <td class="text-center">${h.weightQty || "-"}</td>
             <td>${h.weightUnit || "-"}</td>
             <td class="text-right">${h.netWeight || "-"}</td>
             <td style="font-size: 0.85rem; white-space: nowrap;">${h.netDims || "-"}</td>
-            <td>${h.vendor || "-"}</td>     
+            <td class="text-center">${h.dimsQty || "-"}</td>
+            <td>${h.vendor === 'v01199' ? 'V 01-199' : (h.vendor === 'v01198' ? 'V 01-198' : (h.vendor || "-"))}</td>     
             <td>${h.origin || "-"}</td>
 
             <td class="text-right" style="font-weight: bold; color: #059669; white-space: nowrap;">
@@ -599,6 +611,56 @@ function renderHistoryPage(page) {
         paginationControls.appendChild(nextBtn);
     }
 }
+
+// ฟังก์ชันล้างข้อมูล
+window.clearFormData = function () {
+    // 1. ถามยืนยัน
+    const t = translations[currentLang];
+    const confirmMsg = currentLang === 'th' ? "คุณแน่ใจหรือไม่ที่จะล้างข้อมูลทั้งหมด?" :
+        currentLang === 'cn' ? "您确定要清除所有数据吗？" :
+            "Are you sure you want to clear all data?";
+
+    if (!confirm(confirmMsg)) return;
+
+    // 2. ล้างค่าใน Input และ Select ส่วนใหญ่
+    document.querySelectorAll('input, select').forEach(el => {
+        // ข้ามปุ่มกด, Radio, และช่อง Unit (เราจะจัดการ Unit แยกต่างหากใน Step 3)
+        if (el.type === 'button' || el.type === 'submit' || el.type === 'radio' || el.id === 'dimension-unit') return;
+
+        // คืนค่า Default ให้กับตัวหารและตัวคูณ
+        if (el.id === 'volumetric-divisor') el.value = "500";
+        else if (el.id === 'volumetric-multiplier') el.value = "200";
+        else el.value = ""; // ค่าอื่นๆ ให้เป็นว่าง
+    });
+
+    // 3. จัดการช่อง Unit (แบบเจาะจง)
+    const unitEl = document.getElementById('dimension-unit');
+    if (unitEl) {
+        if (unitEl.tagName === 'SELECT') {
+            // ถ้ายังเป็น Dropdown ให้เลือกค่า "box" (ตัวพิมพ์เล็ก ตามค่าใน HTML option value)
+            unitEl.value = "box";
+        } else {
+            // ถ้าเป็น Input Text (พิมพ์เองได้) ให้ใส่คำว่า "Box" หรือ "กล่อง" (ตามภาษาที่เลือก)
+            unitEl.value = translations[currentLang].unit_box || "Box";
+        }
+    }
+
+    // 4. รีเซ็ต Radio Button (Box Option)
+    const boxExclude = document.getElementById("box-exclude");
+    if (boxExclude) boxExclude.checked = true;
+
+    // 5. รีเซ็ต Checkbox (Special)
+    const isSpecial = document.getElementById("is-special");
+    if (isSpecial) isSpecial.checked = false;
+
+    // 6. ลบ Session Storage และคำนวณใหม่
+    sessionStorage.removeItem(FORM_STATE_KEY);
+
+    updateWeightTotals();
+    updateGrossDimensions();
+    calculateShipping();
+    updateCostLabels();
+};
 
 // =============================
 // LocalStorage: Row Configuration
@@ -1037,11 +1099,19 @@ function updateVolumeFromWeight() {
     const vendor = vendorSelect?.value || "";
     const divisor = toNum(volumetricDivisorInput?.value) || 500;
     let m3 = 0;
-    if (vendor === 'v01199') { if (divisor > 0) m3 = totalKg / divisor; }
-    else { m3 = (totalKg * divisor) / 1_000_000; }
+
+    if (vendor === 'v01199') {
+        if (divisor > 0) {
+            m3 = totalKg / divisor;
+            // [แก้ไข] ปัดเศษขึ้นในทศนิยมตำแหน่งที่ 1 (เช่น 1.24 -> 1.3)
+            m3 = Math.ceil(m3 * 10) / 10;
+        }
+    } else {
+        m3 = (totalKg * divisor) / 1_000_000;
+    }
+
     setIfElement(volumeFromWeightOutput, totalKg ? formatNum(m3, 1) : "");
 }
-
 function updateWeightTotals() {
     const totalNet = updateTotalNetWeight();
     const pkg = toNum(addWeightInput?.value);
@@ -1294,6 +1364,219 @@ allInputs.forEach(el => {
     });
 });
 
+// =========================================
+// [เพิ่มใหม่] ฟังก์ชันค้นหา Part Number และเติมข้อมูล
+// =========================================
+async function searchAndFillByPartNumber() {
+    const partNumberInput = document.getElementById("part-number");
+    const pNum = partNumberInput.value.trim();
+
+    // ถ้าไม่มีข้อมูล ไม่ต้องทำอะไร
+    if (!pNum) return;
+
+    try {
+        // 1. ค้นหาใน Firebase collection 'history' โดยหา Part Number ที่ตรงกัน
+        const q = query(collection(db, "history"), where("partNumber", "==", pNum));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            // กรณีไม่เจอข้อมูล (อาจจะ console.log ไว้เงียบๆ หรือแจ้งเตือนก็ได้)
+            console.log("No history found for this Part Number.");
+            return;
+        }
+
+        // 2. หาข้อมูลล่าสุด (เนื่องจากเราไม่ได้ทำ Index แบบละเอียด ให้ดึงมาทั้งหมดแล้ว Sort ใน JS)
+        let docs = [];
+        querySnapshot.forEach((doc) => {
+            docs.push(doc.data());
+        });
+
+        // เรียงลำดับจากวันที่ล่าสุดไปเก่าสุด
+        docs.sort((a, b) => {
+            const timeA = a.timestamp && a.timestamp.seconds ? a.timestamp.seconds : 0;
+            const timeB = b.timestamp && b.timestamp.seconds ? b.timestamp.seconds : 0;
+            return timeB - timeA;
+        });
+
+        const latestData = docs[0];
+
+        // 3. ถามยืนยันผู้ใช้ก่อนเขียนทับข้อมูล (เพื่อป้องกันการเผลอ)
+        const t = translations[currentLang];
+        const confirmMsg = currentLang === 'th' ? `พบประวัติของ Part No. "${pNum}"\nต้องการโหลดข้อมูลล่าสุดหรือไม่?` :
+            currentLang === 'cn' ? `找到部件号 "${pNum}" 的历史记录。\n是否加载最新数据？` :
+                `History found for Part No. "${pNum}".\nDo you want to load the latest data?`;
+
+        if (confirm(confirmMsg)) {
+            fillFormWithData(latestData);
+        }
+
+    } catch (error) {
+        console.error("Error searching part number:", error);
+    }
+}
+
+// =========================================
+// [เพิ่มใหม่] Part Number Autocomplete Logic
+// =========================================
+let debounceTimer;
+
+function setupPartNumberAutocomplete() {
+    const input = document.getElementById("part-number");
+    const suggestionBox = document.getElementById("suggestion-box");
+
+    if (!input || !suggestionBox) return;
+
+    // 1. ดักจับการพิมพ์ (Input Event)
+    input.addEventListener("input", function () {
+        const text = this.value.trim();
+
+        // Clear Timeout เดิม (Debounce: รอให้หยุดพิมพ์แป๊บนึงค่อยหา)
+        clearTimeout(debounceTimer);
+
+        if (text.length < 1) {
+            suggestionBox.classList.add("hidden");
+            suggestionBox.innerHTML = "";
+            return;
+        }
+
+        debounceTimer = setTimeout(() => fetchSuggestions(text), 300);
+    });
+
+    // 2. ซ่อนเมื่อคลิกที่อื่น
+    document.addEventListener("click", function (e) {
+        if (e.target !== input && e.target !== suggestionBox) {
+            suggestionBox.classList.add("hidden");
+        }
+    });
+}
+
+async function fetchSuggestions(text) {
+    const suggestionBox = document.getElementById("suggestion-box");
+
+    try {
+        // ค้นหาคำที่ "ขึ้นต้นด้วย" text (ใช้เทคนิค str + '\uf8ff')
+        const q = query(
+            collection(db, "history"),
+            orderBy("partNumber"),
+            startAt(text),
+            endAt(text + "\uf8ff"),
+            limit(10) // เอาแค่ 10 รายการ
+        );
+
+        const querySnapshot = await getDocs(q);
+        const uniqueParts = new Set();
+        const suggestions = [];
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.partNumber && !uniqueParts.has(data.partNumber)) {
+                uniqueParts.add(data.partNumber);
+                suggestions.push(data);
+            }
+        });
+
+        renderSuggestions(suggestions);
+
+    } catch (error) {
+        console.error("Autocomplete error:", error);
+    }
+}
+
+function renderSuggestions(list) {
+    const suggestionBox = document.getElementById("suggestion-box");
+    suggestionBox.innerHTML = "";
+
+    // [แก้ไข] กรณีไม่เจอข้อมูล: ให้แสดงข้อความว่า "ไม่พบข้อมูล"
+    if (list.length === 0) {
+        const li = document.createElement("li");
+
+        // ตกแต่งให้ดูเป็นข้อความแจ้งเตือน (สีเทา, กดไม่ได้)
+        li.style.color = "#94a3b8";
+        li.style.cursor = "default";
+        li.style.justifyContent = "center";
+        li.style.fontStyle = "italic";
+
+        // ใช้คำแปลที่มีอยู่แล้วในระบบ (msg_no_history)
+        // TH: "ไม่พบประวัติการคำนวณ", EN: "No history found."
+        const msg = translations[currentLang]?.msg_no_history || "No Data";
+        li.textContent = msg;
+
+        suggestionBox.appendChild(li);
+        suggestionBox.classList.remove("hidden"); // บังคับให้กล่องแสดงผล
+        return;
+    }
+
+    // กรณีเจอข้อมูล (โค้ดเดิม)
+    list.forEach(item => {
+        const li = document.createElement("li");
+
+        li.innerHTML = `
+            <div class="suggestion-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <span>${item.partNumber}</span> <span style="font-size:0.8em; color:#94a3b8; margin-left:auto;">(${item.goodsName || '-'})</span>
+        `;
+
+        li.addEventListener("click", () => {
+            document.getElementById("part-number").value = item.partNumber;
+            suggestionBox.classList.add("hidden");
+            fillFormWithData(item);
+        });
+
+        suggestionBox.appendChild(li);
+    });
+
+    suggestionBox.classList.remove("hidden");
+}
+
+// ฟังก์ชันช่วยเติมข้อมูลลงฟอร์ม
+function fillFormWithData(data) {
+    // 1. General Info
+    if (data.goodsName) document.getElementById("goods-name").value = data.goodsName;
+    if (data.origin) document.getElementById("origin-country").value = data.origin;
+    if (data.destination) {
+        document.getElementById("destination-country").value = data.destination;
+        // อัปเดต Rate ตามประเทศปลายทาง
+        if (document.getElementById("rate")) document.getElementById("rate").value = getRateByDestination(data.destination);
+    }
+
+    // 2. Vendor
+    if (data.vendor) document.getElementById("vendor").value = data.vendor;
+
+    // 3. Box Option
+    if (data.boxOption) {
+        if (data.boxOption === 'Include Box' || data.boxOption === 'include') {
+            document.getElementById("box-include").checked = true;
+        } else {
+            document.getElementById("box-exclude").checked = true;
+        }
+    }
+
+    // 4. Weight & Qty
+    if (data.netWeight) document.getElementById("net-weight").value = data.netWeight;
+    if (data.weightQty) document.getElementById("weight-qty").value = data.weightQty;
+    if (data.weightUnit) document.getElementById("weight-unit").value = data.weightUnit;
+
+    // 5. Dimensions
+    if (data.netDims) {
+        const parts = data.netDims.split("x").map(s => s.trim());
+        if (parts.length === 3) {
+            document.getElementById("net-width").value = parts[0];
+            document.getElementById("net-length").value = parts[1];
+            document.getElementById("net-height").value = parts[2];
+        }
+    }
+
+    // 6. Dims Qty & Unit
+    if (data.dimsQty) document.getElementById("dimension-qty").value = data.dimsQty;
+
+    // 7. คำนวณใหม่ทั้งหมด
+    updateWeightTotals();
+    updateGrossDimensions();
+    calculateShipping();
+    updateCostLabels();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // 1. ตั้งค่าภาษาเริ่มต้น
     setLanguage(localStorage.getItem(LANG_KEY) || "en");
@@ -1330,9 +1613,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // =========================================
-    // 6. [ใหม่] กด Enter เพื่อไปช่องถัดไป
-    // =========================================
+    // 6. [เพิ่มใหม่] เชื่อมต่อฟังก์ชันค้นหา Part Number (เมื่อกด Enter หรือคลิกออก)
+    const partNumberInput = document.getElementById("part-number");
+    if (partNumberInput) {
+        partNumberInput.addEventListener("change", searchAndFillByPartNumber);
+    }
+
+    // 7. [เพิ่มใหม่] เริ่มระบบ Autocomplete (Google Style)
+    setupPartNumberAutocomplete();
+
+    // 8. กด Enter เพื่อไปช่องถัดไป (Enter Key Navigation)
     document.addEventListener("keydown", (e) => {
         // ทำงานเฉพาะปุ่ม Enter
         if (e.key !== "Enter") return;
