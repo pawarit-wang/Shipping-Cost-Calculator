@@ -214,6 +214,7 @@ button:hover {
 
 .nav-menu {
     list-style: none;
+    align-items: center;
     display: flex;
     gap: 20px;
     margin: 0;
@@ -457,7 +458,7 @@ button:hover {
     .nav-menu li {
         width: 100%;
         text-align: center;
-        margin: 0;
+        height: 100%;
     }
 
     .nav-menu li a {
@@ -970,3 +971,141 @@ tr.drag-over {
     width: 18px;
     height: 18px;
 }
+
+/* =========================================
+   Language Dropdown & Flags Styles
+   ========================================= */
+.lang-dropdown {
+    position: relative;
+    margin-left: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.selected-lang {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #cbd5e1;
+    
+    /* แก้ไข: เปลี่ยนจาก padding: 10px 0; เป็น 0 หรือค่าน้อยๆ */
+    padding: 0; 
+    
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s;
+    height: 100%; /* ให้ความสูงเท่าเพื่อน */
+}
+
+.selected-lang:hover {
+    color: #fff;
+}
+
+.selected-lang .arrow {
+    font-size: 0.7rem;
+    margin-left: 2px;
+    margin-top: 2px; /* ดันลงนิดหน่อยให้ดูสมดุล */
+}
+
+/* กล่องเมนูที่ซ่อนอยู่ */
+.lang-list {
+    display: none; /* ซ่อนไว้ก่อน */
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 5px 0;
+    min-width: 120px;
+    list-style: none;
+    z-index: 1001;
+    border: 1px solid #e2e8f0;
+}
+
+/* แสดงเมนูเมื่อเอาเมาส์ชี้ */
+.lang-dropdown:hover .lang-list {
+    display: block;
+}
+
+.lang-list li {
+    margin: 0;
+}
+
+.lang-list a {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px !important;
+    color: #334155 !important; /* สีตัวอักษรใน Dropdown (สีเข้ม) */
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.lang-list a:hover {
+    background-color: #f1f5f9;
+    color: #0f172a !important;
+}
+
+.lang-list a.active {
+    background-color: #e0f2fe;
+    color: #0284c7 !important;
+    font-weight: 700;
+}
+
+.flag-icon {
+    font-size: 1.2rem; /* ขนาดธง */
+}
+
+/* ปรับแต่งสำหรับมือถือ (Mobile) */
+@media (max-width: 768px) {
+    .lang-dropdown {
+        width: 100%;
+        margin-left: 0;
+        border-top: 1px solid #334155;
+    }
+
+    .selected-lang {
+        justify-content: center;
+        padding: 15px 0;
+    }
+
+    .lang-list {
+        position: static; /* ให้เรียงต่อลงมา ไม่ลอย */
+        width: 100%;
+        box-shadow: none;
+        background-color: #1e293b; /* สีพื้นหลังเดียวกับเมนูมือถือ */
+        border: none;
+        display: none; /* ซ่อนไว้รอการ Hover หรือ Focus */
+    }
+    
+    /* ในมือถือ ให้แสดงลิสต์ตลอดเวลา หรือจะใช้ :hover ก็ได้ */
+    .lang-dropdown:hover .lang-list {
+        display: block;
+    }
+
+    .lang-list a {
+        color: #e2e8f0 !important;
+        justify-content: center;
+    }
+
+    .lang-list a:hover {
+        background-color: #334155;
+    }
+}
+
+/* เพิ่มต่อท้ายไฟล์ style.css */
+.flag-img {
+    width: 22px;        /* ความกว้างธง */
+    height: auto;       /* ความสูงปรับอัตโนมัติ */
+    border-radius: 2px; /* มุมมนนิดหน่อย */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* เงาบางๆ ให้ดูมีมิติ */
+    display: block;
+}
+
+/* ปรับให้ Dropdown สวยขึ้นอีกนิด */
+.lang-list a {
+    gap: 12px !important; /* เพิ่มระยะห่างระหว่างธงกับตัวหนังสือ */
+}
+

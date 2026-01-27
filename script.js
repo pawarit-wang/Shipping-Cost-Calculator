@@ -5,10 +5,9 @@
 // =============================
 // 1. Firebase Configuration & Imports
 // =============================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { auth, db } from "./firebase-config.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 import {
-    getFirestore,
     collection,
     addDoc,
     query,
@@ -20,21 +19,6 @@ import {
     startAt,
     endAt
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyCSvGReWCatohjigRGVX3feyNB1d-zO8lg",
-    authDomain: "shipping-calculator-e37ad.firebaseapp.com",
-    projectId: "shipping-calculator-e37ad",
-    storageBucket: "shipping-calculator-e37ad.firebasestorage.app",
-    messagingSenderId: "408065703055",
-    appId: "1:408065703055:web:d1a524be0dcdd91849c4fa",
-    measurementId: "G-STV4L4D3HW"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db = getFirestore(app);
 
 // ---------- Config Constants ----------
 const VOLUMETRIC_DIVISOR = 500;
@@ -455,6 +439,12 @@ function getRateByDestination(dest) {
 // 1. ฟังก์ชัน Save ลง Firebase
 window.saveCalculation = async function () {
     const finalCost = document.getElementById("result-destination")?.value;
+
+    if (!auth.currentUser) {
+        alert("Please login first!");
+        return;
+    }
+
     if (!finalCost) {
         alert("Please calculate shipping cost first!");
         return;
@@ -474,6 +464,9 @@ window.saveCalculation = async function () {
     }
 
     const entry = {
+        uid: auth.currentUser.uid,
+        email: auth.currentUser.email,
+
         timestamp: new Date(),
         partImage: imageData,
         origin: document.getElementById("origin-country").value,
@@ -577,25 +570,16 @@ function renderHistoryPage(page) {
 
             const tr = document.createElement("tr");
             tr.innerHTML = `
-            <td style="font-size: 0.8rem; color: #64748b; white-space: nowrap;">${timeStr}</td>
             <td>${h.partNumber || "-"}</td>
             <td>${h.goodsName || "-"}</td>
             <td>${boxText}</td>
-            <td class="text-center">${h.weightQty || "-"}</td>
+
+            <td class="text-center">${h.netWeight || "-"}</td>
             <td>${h.weightUnit || "-"}</td>
-            <td class="text-right">${h.netWeight || "-"}</td>
             <td style="font-size: 0.85rem; white-space: nowrap;">${h.netDims || "-"}</td>
-            <td class="text-center">${h.dimsQty || "-"}</td>
+
             <td>${h.vendor === 'v01199' ? 'V 01-199' : (h.vendor === 'v01198' ? 'V 01-198' : (h.vendor || "-"))}</td>     
             <td>${h.origin || "-"}</td>
-
-            <td class="text-right" style="font-weight: bold; color: #059669; white-space: nowrap;">
-                ${h.currency || ""} ${formatNum(h.cost, 2)}
-            </td>
-
-            <td class="text-right" style="font-weight: bold; color: #0369a1; white-space: nowrap;">
-                ${h.currency || ""} ${formatNum(pricePerPiece, 2)}
-            </td>
 
             <td class="text-center">${imgHtml}</td>
             `;
@@ -1084,10 +1068,32 @@ function setLanguage(lang) {
     localStorage.setItem(LANG_KEY, lang);
     currentLang = lang;
 
+    // --- 1. ส่วนที่เพิ่ม: อัปเดตธงและข้อความตรงหัว Dropdown ---
+    const flagUrls = {
+        en: "https://flagcdn.com/w40/us.png",
+        th: "https://flagcdn.com/w40/th.png",
+        cn: "https://flagcdn.com/w40/cn.png"
+    };
+    const texts = { en: "EN", th: "TH", cn: "CN" };
+
+    const currFlag = document.getElementById("curr-flag");
+    const currText = document.getElementById("curr-text");
+
+    if (currFlag) currFlag.src = flagUrls[lang];
+    if (currText) currText.textContent = texts[lang];
+    // -----------------------------------------------------
+
+    // 2. เปลี่ยนสถานะ active ในลิสต์ (แก้ Selector ให้ตรงกับโครงสร้างใหม่)
+    document.querySelectorAll('.lang-list a').forEach(el => {
+        el.classList.toggle('active', el.id === `lang-${lang}`);
+    });
+
+    // 3. เปลี่ยน Navbar Link Active (โค้ดเดิมของคุณ)
     document.querySelectorAll('.lang-switch a').forEach(el => {
         el.classList.toggle('active', el.id === `lang-${lang}`);
     });
 
+    // 4. เปลี่ยนข้อความในหน้าเว็บ (โค้ดเดิมของคุณ)
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[lang][key]) {
@@ -1097,7 +1103,6 @@ function setLanguage(lang) {
         }
     });
 
-    // Re-render history table to apply translations to body content
     if (document.getElementById("history-body")) {
         renderHistoryPage(currentPage);
     }
@@ -1929,3 +1934,102 @@ function getCountryShort(c) {
     if (c === 'germany') return 'DE';
     return c.toUpperCase().substring(0, 3);
 }
+
+// =========================================
+// DUTY PAGE LOGIC (Full Excel Version)
+// =========================================
+
+window.calculateDutyPage = function () {
+    // 1. Goods Value
+    const price = parseFloat(document.getElementById('d-price')?.value) || 0;
+    const rate = parseFloat(document.getElementById('d-rate')?.value) || 1;
+    const localPrice = price * rate;
+    setVal('d-res-local-price', localPrice);
+
+    // 2. Freight
+    const freightBase = parseFloat(document.getElementById('d-freight-base')?.value) || 0;
+    const weight = parseFloat(document.getElementById('d-weight')?.value) || 0;
+    const freightTotal = freightBase * weight;
+    setVal('d-freight', freightTotal);
+
+    // 3. Insurance
+    const insRate = parseFloat(document.getElementById('d-insurance-rate')?.value) || 1;
+    const insurance = localPrice * (insRate / 100);
+    setVal('d-insurance', insurance);
+
+    // 4. CIF & Duty
+    const cif = localPrice + freightTotal + insurance;
+    const dutyPercent = parseFloat(document.getElementById('d-duty-rate')?.value) || 0;
+    const dutyAmount = cif * (dutyPercent / 100);
+    setVal('d-res-duty', dutyAmount);
+
+    // 5. Total Value (CIF + Duty) -> Base for VAT
+    const totalValue = cif + dutyAmount;
+    setVal('d-res-total-value', totalValue);
+
+    // 6. VAT Cost
+    const vatPercent = parseFloat(document.getElementById('d-vat-rate')?.value) || 7;
+    const vatCost = totalValue * (vatPercent / 100);
+    setVal('d-res-vat', vatCost);
+
+    // 7. Fees (Storage & Service)
+    const storage = parseFloat(document.getElementById('d-storage')?.value) || 0;
+    const serviceBase = parseFloat(document.getElementById('d-service-base')?.value) || 0;
+
+    // Service VAT & Total
+    const serviceVat = serviceBase * 0.07;
+    const serviceTotal = serviceBase + serviceVat;
+    setVal('d-service-vat', serviceVat);
+    setVal('d-service-total', serviceTotal);
+
+    // 8. Import Cost Calculation (ตามสูตร Excel: Duty + Storage + Service Base)
+    // หมายเหตุ: ในไฟล์ Excel Import Cost = 4251.5 มาจาก 3441.5 + 600 + 210
+    const importCost = dutyAmount + storage + serviceBase;
+    setVal('d-res-import-cost', importCost);
+
+    // 9. Cost Per Piece
+    const pieces = parseFloat(document.getElementById('d-pieces')?.value) || 1;
+    const perPiece = importCost / pieces;
+    setVal('d-res-cost-per-piece', perPiece);
+};
+
+// Helper function เล็กๆ เพื่อลดโค้ดซ้ำ
+function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = formatNum(val);
+}
+
+// อัปเดตฟังก์ชันล้างค่า (Clear) ให้ครบทุกช่อง
+window.clearDutyForm = function () {
+    const ids = [
+        'd-vendor', 'd-goods-name', 'd-part-number', 'd-hs-code',
+        'd-country', 'd-zone', 'd-pieces',
+        'd-price', 'd-rate', 'd-res-local-price',
+        'd-freight-base', 'd-weight', 'd-freight',
+        'd-insurance-rate', 'd-insurance',
+        'd-duty-rate', 'd-res-duty', 'd-res-total-value',
+        'd-vat-rate', 'd-res-vat',
+        'd-storage', 'd-service-base', 'd-service-vat', 'd-service-total',
+        'd-res-import-cost', 'd-res-cost-per-piece'
+    ];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+    // Restore Defaults
+    if (document.getElementById('d-vat-rate')) document.getElementById('d-vat-rate').value = "7";
+    if (document.getElementById('d-insurance-rate')) document.getElementById('d-insurance-rate').value = "1";
+};
+
+// Auto Calc Listener
+document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById('d-price')) {
+        const inputs = [
+            'd-price', 'd-rate', 'd-freight-base', 'd-weight', 'd-insurance-rate',
+            'd-duty-rate', 'd-vat-rate', 'd-storage', 'd-service-base', 'd-pieces'
+        ];
+        inputs.forEach(id => {
+            document.getElementById(id)?.addEventListener('input', window.calculateDutyPage);
+        });
+    }
+});

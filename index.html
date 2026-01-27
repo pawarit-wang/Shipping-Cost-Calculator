@@ -21,11 +21,20 @@
         <ul class="nav-menu">
             <li><a href="table.html" data-i18n="nav_table">Table</a></li>
             <li><a href="index.html" data-i18n="nav_calc">Calculator</a></li>
+            <li><a href="duty.html">Duty Tax</a></li>
             <li><a href="history.html" data-i18n="nav_history">History</a></li>
-            <li class="lang-switch">
-                <a href="#" id="lang-en" class="active">EN</a> |
-                <a href="#" id="lang-th">TH</a> |
-                <a href="#" id="lang-cn">CN</a>
+            <li class="lang-dropdown">
+                <div class="selected-lang">
+                    <img id="curr-flag" src="https://flagcdn.com/w40/us.png" alt="Flag" class="flag-img">
+
+                    <span id="curr-text">EN</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <ul class="lang-list">
+                    <li><a href="#" id="lang-en"><img src="https://flagcdn.com/w40/us.png" class="flag-img"> EN</a></li>
+                    <li><a href="#" id="lang-th"><img src="https://flagcdn.com/w40/th.png" class="flag-img"> TH</a></li>
+                    <li><a href="#" id="lang-cn"><img src="https://flagcdn.com/w40/cn.png" class="flag-img"> CN</a></li>
+                </ul>
             </li>
         </ul>
     </nav>
@@ -338,6 +347,7 @@
         </form>
     </div>
 
+    <script type="module" src="auth.js"></script>
     <script type="module" src="script.js"></script>
 </body>
 

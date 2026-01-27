@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Import Duty Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        /* CSS เฉพาะหน้านี้ (ตกแต่งผลลัพธ์) */
+        .result-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .total-row {
+            background-color: #1e293b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .total-row label {
+            color: #cbd5e1;
+        }
+
+        .total-row input {
+            background-color: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <span class="nav-logo">🚚 Shipping Cost Calculator</span>
+        </div>
+
+        <button class="hamburger" id="hamburger-btn">☰</button>
+
+        <ul class="nav-menu">
+            <li><a href="table.html" data-i18n="nav_table">Table</a></li>
+            <li><a href="index.html" data-i18n="nav_calc">Calculator</a></li>
+            <li><a href="duty.html" class="active">Duty Tax</a></li>
+            <li><a href="history.html" data-i18n="nav_history">History</a></li>
+
+            <li class="lang-dropdown">
+                <div class="selected-lang">
+                    <img id="curr-flag" src="https://flagcdn.com/w40/us.png" alt="Flag" class="flag-img">
+                    <span id="curr-text">EN</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <ul class="lang-list">
+                    <li><a href="#" id="lang-en"><img src="https://flagcdn.com/w40/us.png" class="flag-img"> EN</a></li>
+                    <li><a href="#" id="lang-th"><img src="https://flagcdn.com/w40/th.png" class="flag-img"> TH</a></li>
+                    <li><a href="#" id="lang-cn"><img src="https://flagcdn.com/w40/cn.png" class="flag-img"> CN</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container container-narrow">
+        <h1>Import Duty Calculator</h1>
+
+        <form id="duty-form">
+            <div class="card">
+
+                <h3 style="margin-bottom: 15px; color: #334155;">📦 Shipment Information</h3>
+
+                <div class="form-group four-col">
+                    <div>
+                        <label>Forwarder</label>
+                        <select id="d-vendor">
+                            <option value="">Select</option>
+                            <option value="dhl">DHL</option>
+                            <option value="fedex">FedEx</option>
+                            <option value="ups">UPS</option>
+                            <option value="sf">SF</option>
+                            <option value="v01199">V 01-199</option>
+                            <option value="v01198">V 01-198</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Goods Name</label>
+                        <input type="text" id="d-goods-name" placeholder="Name">
+                    </div>
+                    <div>
+                        <label>Part No.</label>
+                        <input type="text" id="d-part-number" placeholder="P/N">
+                    </div>
+                    <div>
+                        <label>HS Code</label>
+                        <input type="text" id="d-hs-code" placeholder="Code">
+                    </div>
+                </div>
+
+                <div class="form-group three-col">
+                    <div>
+                        <label>Origin Country</label>
+                        <input type="text" id="d-country" placeholder="Country">
+                    </div>
+                    <div>
+                        <label>Zone</label>
+                        <input type="text" id="d-zone" placeholder="Zone">
+                    </div>
+                    <div>
+                        <label>Quantity (Pieces)</label>
+                        <input type="text" id="d-pieces" inputmode="decimal" placeholder="e.g. 50"
+                            onblur="formatInput(this)">
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;">
+
+                <h3 style="margin-bottom: 15px; color: #334155;">💰 Valuation & Tax</h3>
+
+                <div class="form-group three-col">
+                    <div>
+                        <label>Origin Value</label>
+                        <input type="text" id="d-price" inputmode="decimal" placeholder="0.00"
+                            onblur="formatInput(this)">
+                    </div>
+                    <div>
+                        <label>Exchange Rate</label>
+                        <input type="text" id="d-rate" inputmode="decimal" placeholder="31.5"
+                            onblur="formatInput(this)">
+                    </div>
+                    <div>
+                        <label>Local Value (THB)</label>
+                        <input type="text" id="d-res-local-price" readonly
+                            style="background-color: #f8fafc; font-weight: 600;">
+                    </div>
+                </div>
+
+                <div class="form-group three-col">
+                    <div>
+                        <label>Freight Rate</label>
+                        <input type="text" id="d-freight-base" inputmode="decimal" placeholder="Rate"
+                            onblur="formatInput(this)">
+                    </div>
+                    <div>
+                        <label>Weight (Kg)</label>
+                        <input type="text" id="d-weight" inputmode="decimal" placeholder="Kg"
+                            onblur="formatInput(this)">
+                    </div>
+                    <div>
+                        <label>Freight Value (THB)</label>
+                        <input type="text" id="d-freight" readonly style="background-color: #f8fafc; font-weight: 600;">
+                    </div>
+                </div>
+
+                <div class="form-group two-col">
+                    <div>
+                        <label>Insurance Rate (%)</label>
+                        <input type="text" id="d-insurance-rate" inputmode="decimal" value="1"
+                            onblur="formatInput(this)">
+                    </div>
+                    <div>
+                        <label>Insurance Value (THB)</label>
+                        <input type="text" id="d-insurance" readonly
+                            style="background-color: #f8fafc; font-weight: 600;">
+                    </div>
+                </div>
+
+                <div class="form-group three-col">
+                    <div>
+                        <label>Duty Rate (%)</label>
+                        <input type="text" id="d-duty-rate" inputmode="decimal" placeholder="e.g. 10"
+                            onblur="formatInput(this)">
+                    </div>
+                    <div>
+                        <label style="color: #b45309;">Import Duty Fee</label>
+                        <input type="text" id="d-res-duty" readonly
+                            style="background-color: #fffbeb; color: #b45309; font-weight: bold;">
+                    </div>
+                    <div>
+                        <label>VAT Base (CIF + Duty)</label>
+                        <input type="text" id="d-res-total-value" readonly style="background-color: #f1f5f9;">
+                    </div>
+                </div>
+
+                <div class="form-group two-col">
+                    <div>
+                        <label>VAT Rate (%)</label>
+                        <input type="text" id="d-vat-rate" inputmode="decimal" value="7" onblur="formatInput(this)">
+                    </div>
+                    <div>
+                        <label style="color: #15803d;">VAT Amount</label>
+                        <input type="text" id="d-res-vat" readonly
+                            style="background-color: #f0fdf4; color: #15803d; font-weight: bold;">
+                    </div>
+                </div>
+
+                <div class="form-group four-col">
+                    <div>
+                        <label>Storage</label>
+                        <input type="text" id="d-storage" inputmode="decimal" placeholder="0.00"
+                            onblur="formatInput(this)">
+                    </div>
+                    <div>
+                        <label>Service (Base)</label>
+                        <input type="text" id="d-service-base" inputmode="decimal" placeholder="0.00"
+                            onblur="formatInput(this)">
+                    </div>
+                    <div>
+                        <label>Service VAT (7%)</label>
+                        <input type="text" id="d-service-vat" readonly
+                            style="background-color: #f8fafc; font-size: 0.9rem;">
+                    </div>
+                    <div>
+                        <label>Service Total</label>
+                        <input type="text" id="d-service-total" readonly
+                            style="background-color: #f8fafc; font-weight: 600;">
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 2px dashed #cbd5e1; margin: 25px 0;">
+
+                <div class="form-group two-col">
+                    
+                    <div style="background-color: #f1f5f9; padding: 12px 15px; border-radius: 8px; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                        <label style="font-size: 0.8rem; color: #64748b; margin-bottom: 2px; display: block;">TOTAL IMPORT COST</label>
+                        
+                        <input type="text" id="d-res-import-cost" readonly 
+                            style="background-color: transparent; border: none; font-size: 1.4rem; font-weight: 800; color: #0f172a; padding: 0; height: auto !important; width: 100%;">
+                        
+                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">(Duty + Storage + Service Base)</div>
+                    </div>
+
+                    <div style="background-color: #eff6ff; padding: 12px 15px; border-radius: 8px; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+                        <label style="font-size: 0.8rem; color: #3b82f6; margin-bottom: 2px; display: block;">COST PER PIECE</label>
+                        
+                        <input type="text" id="d-res-cost-per-piece" readonly 
+                            style="background-color: transparent; border: none; font-size: 1.4rem; font-weight: 800; color: #2563eb; padding: 0; height: auto !important; width: 100%;">
+                        
+                        <div style="height: 14px;"></div> 
+                    </div>
+
+                </div>
+
+                <div class="form-group" style="margin-top: 25px; display: flex; gap: 10px;">
+                    <button type="button" onclick="calculateDutyPage()"
+                        style="background-color: #0f172a; color: white; flex: 1; padding: 12px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">
+                        Calculate
+                    </button>
+                    <button type="button" onclick="clearDutyForm()"
+                        style="background-color: #ef4444; color: white; flex: 1; padding: 12px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">
+                        Clear Data
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <script type="module" src="auth.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
