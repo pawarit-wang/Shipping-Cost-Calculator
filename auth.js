@@ -1,10 +1,9 @@
 // ไฟล์: auth.js
-// 1. เปลี่ยนการ import ด้านบนเป็นแบบนี้
-import { auth, db } from "./firebase-config.js"; // เรียกใช้ตัวแปรจากไฟล์กลาง
+import { auth, db } from "./firebase-config.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. ส่วน Logic คงเดิม (แต่เพิ่ม try-catch กัน Error เรื่อง Permission)
+// ส่วน Login Form (คงเดิม)
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
@@ -24,46 +23,35 @@ if (loginForm) {
     });
 }
 
-// ระบบ Register
-const registerForm = document.getElementById('register-form');
-if (registerForm) {
-    registerForm.addEventListener('submit', async (e) => {
+// ส่วน Register Form (ถ้ามี)
+const regForm = document.getElementById('register-form');
+if (regForm) {
+    regForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const email = document.getElementById('reg-email').value;
-        const password = document.getElementById('reg-password').value;
-        const confirmPass = document.getElementById('reg-confirm').value;
+        const pass = document.getElementById('reg-password').value;
+        const confirm = document.getElementById('reg-confirm').value;
         const errorDiv = document.getElementById('reg-error');
 
-        // เช็คว่ารหัสผ่านตรงกันไหม
-        if (password !== confirmPass) {
-            errorDiv.textContent = "Passwords do not match!";
+        if (pass !== confirm) {
+            errorDiv.textContent = "Passwords do not match";
             errorDiv.classList.remove('hidden');
             return;
         }
 
         try {
-            // 2.1 สร้าง User ใน Authentication
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            // 2.2 สร้างข้อมูลใน Firestore ทันที (กำหนดสิทธิ์เป็น 'user' เสมอ)
-            await setDoc(doc(db, "users", user.uid), {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+            // สร้าง User Doc เก็บ Role (default: user)
+            await setDoc(doc(db, "users", userCredential.user.uid), {
                 email: email,
-                role: "user", // <--- จุดสำคัญ! ทุกคนที่สมัครเองจะเป็นแค่ user
+                role: 'user',
                 createdAt: new Date()
             });
-
-            alert("Account created! Please login.");
-            window.location.href = 'login.html';
-
+            alert("Registration Successful!");
+            window.location.href = 'index.html';
         } catch (error) {
             console.error(error);
-            let msg = "Error creating account";
-            if (error.code === 'auth/email-already-in-use') msg = "Email already in use";
-            else if (error.code === 'auth/weak-password') msg = "Password should be at least 6 characters";
-
-            errorDiv.textContent = msg;
+            errorDiv.textContent = error.message;
             errorDiv.classList.remove('hidden');
         }
     });
@@ -71,7 +59,8 @@ if (registerForm) {
 
 onAuthStateChanged(auth, async (user) => {
     const currentPage = window.location.pathname.split("/").pop();
-    const isAuthPage = currentPage === 'login.html' || currentPage === 'register.html';
+    // [แก้ไข] กำหนดหน้า Auth ให้ชัดเจน (รวม login.html และ register.html)
+    const isAuthPage = ['login.html', 'register.html'].includes(currentPage);
 
     // 1. ถ้ายังไม่ Login
     if (!user) {
@@ -89,22 +78,19 @@ onAuthStateChanged(auth, async (user) => {
             return;
         }
 
-        // ✅ เรียกใช้ปุ่ม Logout เสมอเมื่อ Login แล้ว (วางไว้ตรงนี้เพื่อให้ทำงานทุกหน้า)
+        // ✅ เรียกใช้ฟังก์ชันแสดงปุ่ม Logout
         setupLogout();
 
-        // ส่วนเช็คสิทธิ์เฉพาะหน้า table.html
+        // ส่วนเช็คสิทธิ์เฉพาะหน้า table.html (คงเดิม)
         if (currentPage === 'table.html') {
-            document.body.style.display = 'none'; // ซ่อนหน้าเว็บก่อน
-
+            document.body.style.display = 'none'; 
             try {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
-
-                // ถ้าไม่ใช่ Admin ให้ดีดออก
                 if (!userDoc.exists() || userDoc.data().role !== 'admin') {
                     alert("Access Denied: Admin Only (สำหรับผู้ดูแลระบบเท่านั้น)");
                     window.location.href = 'index.html';
                 } else {
-                    document.body.style.display = 'block'; // เป็น Admin จริง -> แสดงหน้าเว็บ
+                    document.body.style.display = 'block'; 
                 }
             } catch (error) {
                 console.error("Permission check error:", error);
@@ -114,13 +100,33 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// ฟังก์ชันช่วยเพิ่มปุ่ม Logout ในเมนู
+// [ปรับปรุง] ฟังก์ชันจัดการปุ่ม Logout
 function setupLogout() {
-    const navMenu = document.querySelector('.nav-menu');
-    if (navMenu && !document.getElementById('btn-logout')) {
-        const li = document.createElement('li');
-        li.innerHTML = `<a href="#" id="btn-logout" style="color: #ef4444;">Logout</a>`;
-        navMenu.appendChild(li);
-        document.getElementById('btn-logout').onclick = () => signOut(auth);
+    const logoutLi = document.getElementById('nav-logout'); // หา <li> ที่เราเพิ่มใน HTML
+    const logoutBtn = document.getElementById('btn-logout');
+
+    // กรณี 1: มีปุ่มใน HTML (ที่เราเพิ่งเพิ่ม) -> ให้แสดงปุ่มนั้น
+    if (logoutLi) {
+        logoutLi.classList.remove('hidden');
+    } 
+    // กรณี 2: ไม่มีปุ่มใน HTML (Fallback) -> สร้างใหม่ด้วย JS เหมือนเดิม
+    else if (!logoutBtn) {
+        const navMenu = document.querySelector('.nav-menu');
+        if (navMenu) {
+            const li = document.createElement('li');
+            li.innerHTML = `<a href="#" id="btn-logout" style="color: #ef4444; font-weight: bold;">Logout</a>`;
+            navMenu.appendChild(li);
+        }
+    }
+
+    // ผูก Event Click ให้ทำงาน
+    const finalBtn = document.getElementById('btn-logout');
+    if (finalBtn) {
+        finalBtn.onclick = (e) => {
+            e.preventDefault(); // ป้องกันการดีดขึ้นบนสุดของหน้า
+            signOut(auth).then(() => {
+                window.location.href = 'login.html'; // Logout เสร็จให้ไปหน้า Login
+            });
+        };
     }
 }

@@ -23,6 +23,7 @@
             <li><a href="index.html" data-i18n="nav_calc">Calculator</a></li>
             <li><a href="duty.html">Duty Tax</a></li>
             <li><a href="history.html" data-i18n="nav_history">History</a></li>
+
             <li class="lang-dropdown">
                 <div class="selected-lang">
                     <img id="curr-flag" src="https://flagcdn.com/w40/us.png" alt="Flag" class="flag-img">
@@ -35,6 +36,10 @@
                     <li><a href="#" id="lang-th"><img src="https://flagcdn.com/w40/th.png" class="flag-img"> TH</a></li>
                     <li><a href="#" id="lang-cn"><img src="https://flagcdn.com/w40/cn.png" class="flag-img"> CN</a></li>
                 </ul>
+            </li>
+            
+            <li id="nav-logout" class="hidden">
+                <a href="#" id="btn-logout" style="color: #ef4444; font-weight: bold;">Logout</a>
             </li>
         </ul>
     </nav>
@@ -195,7 +200,7 @@
 
                     <h4 style="margin: 10px 0 10px; color:#64748b;" data-i18n="subheader_general">General Information
                     </h4>
-                    <div class="form-group four-col">
+                    <div class="form-group four-col" style="grid-template-columns: 0.8fr 0.8fr 1.2fr 1.2fr;">
                         <div>
                             <label for="origin-country" data-i18n="lbl_origin">Origin Country</label>
                             <select id="origin-country" name="origin">
@@ -224,29 +229,9 @@
                         </div>
                         <div>
                             <label for="part-number" data-i18n="lbl_part_number">Part Number</label>
-
-                            <div class="input-with-image">
-                                <div class="input-wrapper-flex">
-                                    <input type="text" id="part-number" name="part-number" autocomplete="off" />
-                                    <ul id="suggestion-box" class="suggestion-list hidden"></ul>
-                                </div>
-
-                                <div class="image-upload-container" title="Upload Image">
-                                    <label for="part-image-input" class="image-upload-label">
-                                        <div id="camera-icon">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                                <path
-                                                    d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
-                                                </path>
-                                                <circle cx="12" cy="13" r="4"></circle>
-                                            </svg>
-                                        </div>
-                                        <img id="image-preview" class="hidden" src="" alt="Preview" />
-                                    </label>
-                                    <input type="file" id="part-image-input" accept="image/*" class="hidden-input" />
-                                </div>
+                            <div class="input-wrapper-flex">
+                                <input type="text" id="part-number" name="part-number" autocomplete="off" />
+                                <ul id="suggestion-box" class="suggestion-list hidden"></ul>
                             </div>
                         </div>
                     </div>

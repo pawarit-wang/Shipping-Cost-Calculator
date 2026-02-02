@@ -152,6 +152,7 @@
             <li><a href="index.html" data-i18n="nav_calc">Calculator</a></li>
             <li><a href="duty.html">Duty Tax</a></li>
             <li><a href="history.html" data-i18n="nav_history">History</a></li>
+
             <li class="lang-dropdown">
                 <div class="selected-lang">
                     <img id="curr-flag" src="https://flagcdn.com/w40/us.png" alt="Flag" class="flag-img">
@@ -164,6 +165,10 @@
                     <li><a href="#" id="lang-th"><img src="https://flagcdn.com/w40/th.png" class="flag-img"> TH</a></li>
                     <li><a href="#" id="lang-cn"><img src="https://flagcdn.com/w40/cn.png" class="flag-img"> CN</a></li>
                 </ul>
+            </li>
+
+            <li id="nav-logout" class="hidden">
+                <a href="#" id="btn-logout" style="color: #ef4444; font-weight: bold;">Logout</a>
             </li>
         </ul>
     </nav>
@@ -193,14 +198,11 @@
                             <th data-i18n="lbl_part_number">Part No.</th>
                             <th data-i18n="lbl_goods_name">Goods Name</th>
                             <th data-i18n="col_box_option">Box Option</th>
-
                             <th data-i18n="col_net_weight">Net W. (kg)</th>
                             <th data-i18n="col_unit">Unit</th>
                             <th data-i18n="col_net_dims">Net Dims (cm)</th>
-
                             <th data-i18n="lbl_vendor">Vendor</th>
                             <th data-i18n="lbl_origin">Origin</th>
-                            <th style="width: 50px;" data-i18n="col_img">Image</th>
                         </tr>
                     </thead>
                     <tbody id="history-body">
@@ -215,22 +217,6 @@
             </div>
             <div id="pagination-controls" class="pagination"></div>
         </div>
-    </div>
-
-    <div id="image-modal" class="modal-overlay hidden">
-
-        <span class="close-modal" onclick="closeImageModal()">&times;</span>
-
-        <div class="modal-image-wrapper">
-            <img class="modal-content" id="modal-img">
-        </div>
-
-        <div class="zoom-controls">
-            <button type="button" onclick="adjustZoom(-0.2)" title="Zoom Out">−</button>
-            <button type="button" onclick="resetZoom()" title="Reset">⟲</button>
-            <button type="button" onclick="adjustZoom(0.2)" title="Zoom In">+</button>
-        </div>
-
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

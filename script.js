@@ -456,19 +456,13 @@ window.saveCalculation = async function () {
     const nh = document.getElementById("net-height").value || 0;
     const netDimsStr = `${nw} x ${nl} x ${nh}`;
 
-    const imgPreview = document.getElementById("image-preview");
-    let imageData = "";
-    // เช็คว่ามีรูปจริงหรือไม่ (ต้องขึ้นต้นด้วย data:image)
-    if (imgPreview && !imgPreview.classList.contains("hidden") && imgPreview.src.startsWith("data:image")) {
-        imageData = imgPreview.src;
-    }
+    // --- ลบส่วน Logic ตรวจสอบรูปภาพ (imageData) ออก ---
 
     const entry = {
         uid: auth.currentUser.uid,
         email: auth.currentUser.email,
-
         timestamp: new Date(),
-        partImage: imageData,
+        // partImage: imageData,  <-- ลบบรรทัดนี้ออก
         origin: document.getElementById("origin-country").value,
         destination: document.getElementById("destination-country").value,
         vendor: document.getElementById("vendor").value,
@@ -560,15 +554,12 @@ function renderHistoryPage(page) {
 
             const qty = parseFloat(String(h.weightQty).replace(/,/g, '')) || 1;
             const cost = parseFloat(h.cost) || 0;
-            const pricePerPiece = cost / qty;
 
-            let imgHtml = `<span style="color:#ccc;">-</span>`;
-            if (h.partImage) {
-                // สร้างรูปย่อ และใส่ onclick เพื่อเปิดดูรูปใหญ่
-                imgHtml = `<img src="${h.partImage}" class="history-thumb" onclick="viewHistoryImage('${h.partImage}')" alt="img">`;
-            }
+            // --- ลบส่วน Logic รูปภาพ (imgHtml) ออกไปเลยครับ ---
 
             const tr = document.createElement("tr");
+
+            // --- ลบคอลัมน์สุดท้ายที่เป็น ${imgHtml} ออก ---
             tr.innerHTML = `
             <td>${h.partNumber || "-"}</td>
             <td>${h.goodsName || "-"}</td>
@@ -580,14 +571,16 @@ function renderHistoryPage(page) {
 
             <td>${h.vendor === 'v01199' ? 'V 01-199' : (h.vendor === 'v01198' ? 'V 01-198' : (h.vendor || "-"))}</td>     
             <td>${h.origin || "-"}</td>
-
-            <td class="text-center">${imgHtml}</td>
             `;
+            // (เอาคอลัมน์ <td>${imgHtml}</td> ออกแล้ว)
+
             historyTableBody.appendChild(tr);
         });
     }
 
+    // ... ส่วน paginationControls คงเดิม ...
     if (paginationControls) {
+        // ... (โค้ดเดิมไม่ต้องแก้) ...
         paginationControls.innerHTML = "";
 
         const prevBtn = document.createElement("button");
@@ -1648,44 +1641,6 @@ function fillFormWithData(data) {
     updateCostLabels();
 }
 
-// =============================
-// Image Upload Handling
-// =============================
-function handleImageUpload(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-            const base64String = event.target.result;
-
-            // แสดงรูป
-            showImagePreview(base64String);
-
-            // บันทึกลง Session Storage (เพื่อให้รูปอยู่ต่อ แม้ Refresh หน้า)
-            try {
-                let state = JSON.parse(sessionStorage.getItem(FORM_STATE_KEY) || "{}");
-                state['part-image-data'] = base64String;
-                sessionStorage.setItem(FORM_STATE_KEY, JSON.stringify(state));
-            } catch (err) {
-                console.log("Storage full or error", err);
-            }
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-function showImagePreview(src) {
-    if (src) {
-        imagePreview.src = src;
-        imagePreview.classList.remove("hidden");
-        cameraIcon.classList.add("hidden");
-    } else {
-        imagePreview.src = "";
-        imagePreview.classList.add("hidden");
-        cameraIcon.classList.remove("hidden");
-    }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
     // 1. ตั้งค่าภาษาเริ่มต้น
     setLanguage(localStorage.getItem(LANG_KEY) || "en");
@@ -1762,69 +1717,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
-});
-
-// =============================
-// Image Viewer Logic (With Zoom)
-// =============================
-let currentZoom = 1;
-
-window.viewHistoryImage = function (src) {
-    const modal = document.getElementById("image-modal");
-    const modalImg = document.getElementById("modal-img");
-
-    if (modal && modalImg) {
-        modalImg.src = src;
-        modal.classList.remove("hidden");
-
-        // รีเซ็ตค่าซูมทุกครั้งที่เปิดรูปใหม่
-        currentZoom = 1;
-        updateImageZoom();
-    }
-};
-
-window.closeImageModal = function () {
-    const modal = document.getElementById("image-modal");
-    if (modal) modal.classList.add("hidden");
-};
-
-window.adjustZoom = function (delta) {
-    currentZoom += delta;
-
-    // จำกัดการซูม (ต่ำสุด 0.5x, สูงสุด 5x)
-    if (currentZoom < 0.5) currentZoom = 0.5;
-    if (currentZoom > 5.0) currentZoom = 5.0;
-
-    updateImageZoom();
-};
-
-window.resetZoom = function () {
-    currentZoom = 1;
-    updateImageZoom();
-};
-
-function updateImageZoom() {
-    const img = document.getElementById("modal-img");
-    if (img) {
-        img.style.transform = `scale(${currentZoom})`;
-    }
-}
-
-// เพิ่มฟังก์ชันใช้ Mouse Wheel หมุนเพื่อซูม
-document.addEventListener("DOMContentLoaded", () => {
-    // ... (Existing DOMContentLoaded code) ...
-
-    // หา element รูปภาพใน Modal เพื่อดักจับ Mouse Wheel
-    const modalImg = document.getElementById("modal-img");
-    if (modalImg) {
-        modalImg.addEventListener("wheel", function (e) {
-            e.preventDefault(); // ป้องกันหน้าเว็บเลื่อน
-
-            // ถ้าหมุนขึ้น (deltaY < 0) ให้ซูมเข้า, หมุนลงให้ซูมออก
-            const delta = e.deltaY < 0 ? 0.1 : -0.1;
-            window.adjustZoom(delta);
-        });
-    }
 });
 
 // =============================
@@ -1940,55 +1832,38 @@ function getCountryShort(c) {
 // =========================================
 
 window.calculateDutyPage = function () {
-    // 1. Goods Value
-    const price = parseFloat(document.getElementById('d-price')?.value) || 0;
-    const rate = parseFloat(document.getElementById('d-rate')?.value) || 1;
+    const price = toNum(document.getElementById('d-price')?.value);
+    const rate = toNum(document.getElementById('d-rate')?.value);
+    const freightBase = toNum(document.getElementById('d-freight-base')?.value);
+    const weight = toNum(document.getElementById('d-weight')?.value);
+    const insRate = 10;
+    const dutyPercent = toNum(document.getElementById('d-duty-rate')?.value);
+    const storage = toNum(document.getElementById('d-storage')?.value);
+    const serviceBase = toNum(document.getElementById('d-service-base')?.value);
+    const pieces = Math.max(1, toNum(document.getElementById('d-pieces')?.value));
+
+    // 1. Local Value
     const localPrice = price * rate;
     setVal('d-res-local-price', localPrice);
 
     // 2. Freight
-    const freightBase = parseFloat(document.getElementById('d-freight-base')?.value) || 0;
-    const weight = parseFloat(document.getElementById('d-weight')?.value) || 0;
     const freightTotal = freightBase * weight;
     setVal('d-freight', freightTotal);
 
     // 3. Insurance
-    const insRate = parseFloat(document.getElementById('d-insurance-rate')?.value) || 1;
     const insurance = localPrice * (insRate / 100);
     setVal('d-insurance', insurance);
 
     // 4. CIF & Duty
     const cif = localPrice + freightTotal + insurance;
-    const dutyPercent = parseFloat(document.getElementById('d-duty-rate')?.value) || 0;
     const dutyAmount = cif * (dutyPercent / 100);
     setVal('d-res-duty', dutyAmount);
 
-    // 5. Total Value (CIF + Duty) -> Base for VAT
-    const totalValue = cif + dutyAmount;
-    setVal('d-res-total-value', totalValue);
-
-    // 6. VAT Cost
-    const vatPercent = parseFloat(document.getElementById('d-vat-rate')?.value) || 7;
-    const vatCost = totalValue * (vatPercent / 100);
-    setVal('d-res-vat', vatCost);
-
-    // 7. Fees (Storage & Service)
-    const storage = parseFloat(document.getElementById('d-storage')?.value) || 0;
-    const serviceBase = parseFloat(document.getElementById('d-service-base')?.value) || 0;
-
-    // Service VAT & Total
-    const serviceVat = serviceBase * 0.07;
-    const serviceTotal = serviceBase + serviceVat;
-    setVal('d-service-vat', serviceVat);
-    setVal('d-service-total', serviceTotal);
-
-    // 8. Import Cost Calculation (ตามสูตร Excel: Duty + Storage + Service Base)
-    // หมายเหตุ: ในไฟล์ Excel Import Cost = 4251.5 มาจาก 3441.5 + 600 + 210
+    // 5. Total Import Cost (Duty + Storage + Service Base)
     const importCost = dutyAmount + storage + serviceBase;
     setVal('d-res-import-cost', importCost);
 
-    // 9. Cost Per Piece
-    const pieces = parseFloat(document.getElementById('d-pieces')?.value) || 1;
+    // 6. Cost Per Piece
     const perPiece = importCost / pieces;
     setVal('d-res-cost-per-piece', perPiece);
 };
@@ -2007,29 +1882,33 @@ window.clearDutyForm = function () {
         'd-price', 'd-rate', 'd-res-local-price',
         'd-freight-base', 'd-weight', 'd-freight',
         'd-insurance-rate', 'd-insurance',
-        'd-duty-rate', 'd-res-duty', 'd-res-total-value',
-        'd-vat-rate', 'd-res-vat',
-        'd-storage', 'd-service-base', 'd-service-vat', 'd-service-total',
+        'd-duty-rate', 'd-res-duty',
+        'd-storage', 'd-service-base',
         'd-res-import-cost', 'd-res-cost-per-piece'
     ];
     ids.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = "";
     });
-    // Restore Defaults
-    if (document.getElementById('d-vat-rate')) document.getElementById('d-vat-rate').value = "7";
-    if (document.getElementById('d-insurance-rate')) document.getElementById('d-insurance-rate').value = "1";
+    if (document.getElementById('d-insurance-rate')) document.getElementById('d-insurance-rate').value = "10";
 };
 
 // Auto Calc Listener
 document.addEventListener("DOMContentLoaded", () => {
+    // ตรวจสอบว่าอยู่ในหน้า Duty หรือไม่
     if (document.getElementById('d-price')) {
         const inputs = [
-            'd-price', 'd-rate', 'd-freight-base', 'd-weight', 'd-insurance-rate',
-            'd-duty-rate', 'd-vat-rate', 'd-storage', 'd-service-base', 'd-pieces'
+            'd-price', 'd-rate', 'd-freight-base', 'd-weight',
+            'd-duty-rate', 'd-storage', 'd-service-base', 'd-pieces'
         ];
+
+        // สำหรับช่องที่พิมพ์ตัวเลข (Input Event)
         inputs.forEach(id => {
             document.getElementById(id)?.addEventListener('input', window.calculateDutyPage);
         });
+
+        // สำหรับช่องที่เป็น Drop-down (Change Event)
+        document.getElementById('d-vendor')?.addEventListener('change', window.calculateDutyPage);
+        document.getElementById('d-country')?.addEventListener('change', window.calculateDutyPage);
     }
 });

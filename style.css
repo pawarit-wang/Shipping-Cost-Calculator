@@ -4,7 +4,7 @@
 body {
     /* เปลี่ยนฟอนต์หลักเป็น Inter */
     font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-    background-color: #f4f6f8;
+    background-color: #F1F5F9;
     margin: 0;
     padding: 0;
     color: #333;
@@ -61,7 +61,7 @@ h1 {
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 15px;
+    padding: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -407,23 +407,27 @@ button:hover {
     /* 1. แสดงปุ่ม Hamburger */
     .hamburger {
         display: block;
-        
+
         /* ดันปุ่มไปขวาสุด */
-        margin-left: auto !important; 
+        margin-left: auto !important;
         margin-right: 0;
         margin-bottom: 5px;
 
         /* ล้างค่าเดิมที่ทำให้ปุ่มยืดและมีสีพื้นหลัง */
-        width: auto !important;       /* สำคัญ: แก้ไม่ให้ปุ่มกว้างเต็มจอ */
-        background: transparent !important; /* สำคัญ: เอาพื้นหลังสีน้ำเงินออก */
+        width: auto !important;
+        /* สำคัญ: แก้ไม่ให้ปุ่มกว้างเต็มจอ */
+        background: transparent !important;
+        /* สำคัญ: เอาพื้นหลังสีน้ำเงินออก */
         border: none;
-        box-shadow: none;             /* เอาเงาออก */
-        
+        box-shadow: none;
+        /* เอาเงาออก */
+
         /* จัดขนาดไอคอน */
         font-size: 1.8rem;
         color: white;
         cursor: pointer;
-        padding: 0 0px;              /* เพิ่มพื้นที่กดให้ง่ายขึ้น */
+        padding: 0 0px;
+        /* เพิ่มพื้นที่กดให้ง่ายขึ้น */
     }
 
     /* 2. ปรับแต่ง Nav Menu ให้เป็น Dropdown ลงมา */
@@ -671,17 +675,23 @@ tr.drag-over {
 
 /* ช่องที่ถูกเลือกมาคำนวณ (Winner) */
 .input-winner {
-    border: 2px solid #22c55e !important;    /* ขอบสีเขียว */
-    background-color: #f0fdf4 !important;    /* พื้นหลังเขียวอ่อน */
-    color: #15803d !important;               /* ตัวหนังสือเขียวเข้ม */
+    border: 2px solid #22c55e !important;
+    /* ขอบสีเขียว */
+    background-color: #f0fdf4 !important;
+    /* พื้นหลังเขียวอ่อน */
+    color: #15803d !important;
+    /* ตัวหนังสือเขียวเข้ม */
     font-weight: 700 !important;
 }
 
 /* ช่องที่ไม่ได้ถูกใช้ (Loser) */
 .input-loser {
-    border: 2px solid #ef4444 !important;    /* ขอบสีแดง */
-    background-color: #fef2f2 !important;    /* พื้นหลังแดงอ่อน */
-    color: #b91c1c !important;               /* ตัวหนังสือแดงเข้ม */
+    border: 2px solid #ef4444 !important;
+    /* ขอบสีแดง */
+    background-color: #fef2f2 !important;
+    /* พื้นหลังแดงอ่อน */
+    color: #b91c1c !important;
+    /* ตัวหนังสือแดงเข้ม */
     font-weight: 500 !important;
 }
 
@@ -742,19 +752,23 @@ tr.drag-over {
    ========================================= */
 .input-with-image {
     display: flex;
-    gap: 8px; /* ระยะห่างระหว่างช่องพิมพ์กับปุ่มรูป */
+    gap: 8px;
+    /* ระยะห่างระหว่างช่องพิมพ์กับปุ่มรูป */
     align-items: center;
 }
 
 .input-wrapper-flex {
-    flex: 1; /* ให้ช่องพิมพ์ยืดเต็มพื้นที่ที่เหลือ */
+    flex: 1;
+    /* ให้ช่องพิมพ์ยืดเต็มพื้นที่ที่เหลือ */
     position: relative;
 }
 
 .image-upload-container {
-    width: 36px; /* ความสูงเท่ากับ Input ปกติ */
+    width: 36px;
+    /* ความสูงเท่ากับ Input ปกติ */
     height: 36px;
-    flex: none; /* ห้ามยืดหด */
+    flex: none;
+    /* ห้ามยืดหด */
 }
 
 .image-upload-label {
@@ -786,7 +800,8 @@ tr.drag-over {
 #image-preview {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* ให้รูปเต็มกล่องโดยไม่เสียสัดส่วน */
+    object-fit: cover;
+    /* ให้รูปเต็มกล่องโดยไม่เสียสัดส่วน */
     display: block;
 }
 
@@ -838,13 +853,18 @@ tr.drag-over {
     max-width: 90%;
     max-height: 90%;
     border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     animation: zoom 0.3s;
 }
 
 @keyframes zoom {
-    from {transform:scale(0)} 
-    to {transform:scale(1)}
+    from {
+        transform: scale(0)
+    }
+
+    to {
+        transform: scale(1)
+    }
 }
 
 .close-modal {
@@ -874,7 +894,8 @@ tr.drag-over {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden; /* ซ่อน Scrollbar ของตัว Overlay หลัก */
+    overflow: hidden;
+    /* ซ่อน Scrollbar ของตัว Overlay หลัก */
 }
 
 /* Wrapper เพื่อคุมพื้นที่รูปภาพ */
@@ -884,22 +905,26 @@ tr.drag-over {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: auto; /* ถ้าซูมใหญ่มาก ให้เลื่อนดูได้ */
+    overflow: auto;
+    /* ถ้าซูมใหญ่มาก ให้เลื่อนดูได้ */
 }
 
 /* ปรับปรุงรูปใน Modal ให้รองรับ Zoom */
 .modal-content {
     max-width: 90%;
     max-height: 90%;
-    transition: transform 0.2s ease-out; /* ซูมลื่นๆ */
-    cursor: grab; /* เปลี่ยนเมาส์เป็นรูปมือจับ */
+    transition: transform 0.2s ease-out;
+    /* ซูมลื่นๆ */
+    cursor: grab;
+    /* เปลี่ยนเมาส์เป็นรูปมือจับ */
     transform-origin: center center;
 }
 
 /* แถบปุ่มควบคุมการซูม */
 .zoom-controls {
     position: absolute;
-    bottom: 80px; /* <<< แก้ตรงนี้ครับ ยิ่งเลขมาก ยิ่งสูงขึ้น (ของเดิม 30px) */
+    bottom: 80px;
+    /* <<< แก้ตรงนี้ครับ ยิ่งเลขมาก ยิ่งสูงขึ้น (ของเดิม 30px) */
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.6);
@@ -922,7 +947,8 @@ tr.drag-over {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0; /* ล้างค่าเดิม */
+    margin: 0;
+    /* ล้างค่าเดิม */
     transition: all 0.2s;
 }
 
@@ -934,7 +960,8 @@ tr.drag-over {
 
 /* ปรับปุ่มปิด (Close) ให้ชัดขึ้น */
 .close-modal {
-    z-index: 2002; /* ให้อยู่เหนือปุ่มซูม */
+    z-index: 2002;
+    /* ให้อยู่เหนือปุ่มซูม */
     background: rgba(0, 0, 0, 0.5);
     width: 40px;
     height: 40px;
@@ -947,7 +974,8 @@ tr.drag-over {
    Export PDF Button
    ========================================= */
 .btn-export-pdf {
-    background-color: #ef4444; /* สีแดง */
+    background-color: #ef4444;
+    /* สีแดง */
     color: white;
     border: none;
     padding: 8px 16px;
@@ -958,7 +986,8 @@ tr.drag-over {
     display: flex;
     align-items: center;
     gap: 8px;
-    width: auto; /* ไม่ให้เต็มจอเหมือนปุ่มอื่น */
+    width: auto;
+    /* ไม่ให้เต็มจอเหมือนปุ่มอื่น */
     transition: background-color 0.2s;
     margin-top: 0;
 }
@@ -987,14 +1016,15 @@ tr.drag-over {
     align-items: center;
     gap: 8px;
     color: #cbd5e1;
-    
+
     /* แก้ไข: เปลี่ยนจาก padding: 10px 0; เป็น 0 หรือค่าน้อยๆ */
-    padding: 0; 
-    
+    padding: 0;
+
     font-weight: 500;
     cursor: pointer;
     transition: color 0.2s;
-    height: 100%; /* ให้ความสูงเท่าเพื่อน */
+    height: 100%;
+    /* ให้ความสูงเท่าเพื่อน */
 }
 
 .selected-lang:hover {
@@ -1004,12 +1034,14 @@ tr.drag-over {
 .selected-lang .arrow {
     font-size: 0.7rem;
     margin-left: 2px;
-    margin-top: 2px; /* ดันลงนิดหน่อยให้ดูสมดุล */
+    margin-top: 2px;
+    /* ดันลงนิดหน่อยให้ดูสมดุล */
 }
 
 /* กล่องเมนูที่ซ่อนอยู่ */
 .lang-list {
-    display: none; /* ซ่อนไว้ก่อน */
+    display: none;
+    /* ซ่อนไว้ก่อน */
     position: absolute;
     top: 100%;
     right: 0;
@@ -1037,7 +1069,8 @@ tr.drag-over {
     align-items: center;
     gap: 10px;
     padding: 10px 15px !important;
-    color: #334155 !important; /* สีตัวอักษรใน Dropdown (สีเข้ม) */
+    color: #334155 !important;
+    /* สีตัวอักษรใน Dropdown (สีเข้ม) */
     text-decoration: none;
     font-weight: 500;
     transition: background 0.2s;
@@ -1055,7 +1088,8 @@ tr.drag-over {
 }
 
 .flag-icon {
-    font-size: 1.2rem; /* ขนาดธง */
+    font-size: 1.2rem;
+    /* ขนาดธง */
 }
 
 /* ปรับแต่งสำหรับมือถือ (Mobile) */
@@ -1072,14 +1106,17 @@ tr.drag-over {
     }
 
     .lang-list {
-        position: static; /* ให้เรียงต่อลงมา ไม่ลอย */
+        position: static;
+        /* ให้เรียงต่อลงมา ไม่ลอย */
         width: 100%;
         box-shadow: none;
-        background-color: #1e293b; /* สีพื้นหลังเดียวกับเมนูมือถือ */
+        background-color: #1e293b;
+        /* สีพื้นหลังเดียวกับเมนูมือถือ */
         border: none;
-        display: none; /* ซ่อนไว้รอการ Hover หรือ Focus */
+        display: none;
+        /* ซ่อนไว้รอการ Hover หรือ Focus */
     }
-    
+
     /* ในมือถือ ให้แสดงลิสต์ตลอดเวลา หรือจะใช้ :hover ก็ได้ */
     .lang-dropdown:hover .lang-list {
         display: block;
@@ -1097,15 +1134,37 @@ tr.drag-over {
 
 /* เพิ่มต่อท้ายไฟล์ style.css */
 .flag-img {
-    width: 22px;        /* ความกว้างธง */
-    height: auto;       /* ความสูงปรับอัตโนมัติ */
-    border-radius: 2px; /* มุมมนนิดหน่อย */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* เงาบางๆ ให้ดูมีมิติ */
+    width: 22px;
+    /* ความกว้างธง */
+    height: auto;
+    /* ความสูงปรับอัตโนมัติ */
+    border-radius: 2px;
+    /* มุมมนนิดหน่อย */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    /* เงาบางๆ ให้ดูมีมิติ */
     display: block;
 }
 
 /* ปรับให้ Dropdown สวยขึ้นอีกนิด */
 .lang-list a {
-    gap: 12px !important; /* เพิ่มระยะห่างระหว่างธงกับตัวหนังสือ */
+    gap: 12px !important;
+    /* เพิ่มระยะห่างระหว่างธงกับตัวหนังสือ */
 }
 
+/* =========================================
+   NOTEBOOK FIX: ทำให้หน้าจอ Notebook ดูเหมือน PC
+   ========================================= */
+
+/* ถ้าหน้าจออยู่ในช่วง Notebook (กว้างกว่ามือถือ แต่เล็กกว่า PC จอใหญ่) */
+@media screen and (min-width: 769px) and (max-width: 1600px) {
+    body {
+        /* ปรับสเกลหน้าจอลง เพื่อให้มีพื้นที่เหมือน PC */
+        zoom: 0.8;
+    }
+
+    /* ป้องกันเมนูซ้อนกันถ้าหน้าจอเล็กมากจริงๆ */
+    .cards-vertical {
+        grid-template-columns: 1fr 1.3fr;
+        /* บังคับให้เป็น 2 คอลัมน์ซ้ายขวาเสมอ */
+    }
+}

@@ -66,6 +66,10 @@
                     <li><a href="#" id="lang-cn"><img src="https://flagcdn.com/w40/cn.png" class="flag-img"> CN</a></li>
                 </ul>
             </li>
+
+            <li id="nav-logout" class="hidden">
+                <a href="#" id="btn-logout" style="color: #ef4444; font-weight: bold;">Logout</a>
+            </li>
         </ul>
     </nav>
 
@@ -75,7 +79,7 @@
         <form id="duty-form">
             <div class="card">
 
-                <h3 style="margin-bottom: 15px; color: #334155;">📦 Shipment Information</h3>
+                <h3 style="margin-bottom: 15px; color: #334155;">Shipment Information</h3>
 
                 <div class="form-group four-col">
                     <div>
@@ -107,7 +111,14 @@
                 <div class="form-group three-col">
                     <div>
                         <label>Origin Country</label>
-                        <input type="text" id="d-country" placeholder="Country">
+                        <select id="d-country">
+                            <option value="">Select Country</option>
+                            <option value="china">China</option>
+                            <option value="thailand">Thailand</option>
+                            <option value="usa">USA</option>
+                            <option value="japan">Japan</option>
+                            <option value="germany">Germany</option>
+                        </select>
                     </div>
                     <div>
                         <label>Zone</label>
@@ -122,7 +133,7 @@
 
                 <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;">
 
-                <h3 style="margin-bottom: 15px; color: #334155;">💰 Valuation & Tax</h3>
+                <h3 style="margin-bottom: 15px; color: #334155;">Valuation & Tax</h3>
 
                 <div class="form-group three-col">
                     <div>
@@ -162,8 +173,8 @@
                 <div class="form-group two-col">
                     <div>
                         <label>Insurance Rate (%)</label>
-                        <input type="text" id="d-insurance-rate" inputmode="decimal" value="1"
-                            onblur="formatInput(this)">
+                        <input type="text" id="d-insurance-rate" value="10" readonly
+                            style="background-color: #f8fafc; cursor: not-allowed;">
                     </div>
                     <div>
                         <label>Insurance Value (THB)</label>
@@ -172,7 +183,7 @@
                     </div>
                 </div>
 
-                <div class="form-group three-col">
+                <div class="form-group two-col">
                     <div>
                         <label>Duty Rate (%)</label>
                         <input type="text" id="d-duty-rate" inputmode="decimal" placeholder="e.g. 10"
@@ -183,25 +194,9 @@
                         <input type="text" id="d-res-duty" readonly
                             style="background-color: #fffbeb; color: #b45309; font-weight: bold;">
                     </div>
-                    <div>
-                        <label>VAT Base (CIF + Duty)</label>
-                        <input type="text" id="d-res-total-value" readonly style="background-color: #f1f5f9;">
-                    </div>
                 </div>
 
                 <div class="form-group two-col">
-                    <div>
-                        <label>VAT Rate (%)</label>
-                        <input type="text" id="d-vat-rate" inputmode="decimal" value="7" onblur="formatInput(this)">
-                    </div>
-                    <div>
-                        <label style="color: #15803d;">VAT Amount</label>
-                        <input type="text" id="d-res-vat" readonly
-                            style="background-color: #f0fdf4; color: #15803d; font-weight: bold;">
-                    </div>
-                </div>
-
-                <div class="form-group four-col">
                     <div>
                         <label>Storage</label>
                         <input type="text" id="d-storage" inputmode="decimal" placeholder="0.00"
@@ -212,47 +207,38 @@
                         <input type="text" id="d-service-base" inputmode="decimal" placeholder="0.00"
                             onblur="formatInput(this)">
                     </div>
-                    <div>
-                        <label>Service VAT (7%)</label>
-                        <input type="text" id="d-service-vat" readonly
-                            style="background-color: #f8fafc; font-size: 0.9rem;">
-                    </div>
-                    <div>
-                        <label>Service Total</label>
-                        <input type="text" id="d-service-total" readonly
-                            style="background-color: #f8fafc; font-weight: 600;">
-                    </div>
                 </div>
 
                 <hr style="border: 0; border-top: 2px dashed #cbd5e1; margin: 25px 0;">
 
                 <div class="form-group two-col">
-                    
-                    <div style="background-color: #f1f5f9; padding: 12px 15px; border-radius: 8px; height: 100%; display: flex; flex-direction: column; justify-content: center;">
-                        <label style="font-size: 0.8rem; color: #64748b; margin-bottom: 2px; display: block;">TOTAL IMPORT COST</label>
-                        
-                        <input type="text" id="d-res-import-cost" readonly 
+
+                    <div
+                        style="background-color: #f1f5f9; padding: 12px 15px; border-radius: 8px; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                        <label style="font-size: 0.8rem; color: #64748b; margin-bottom: 2px; display: block;">TOTAL
+                            IMPORT COST</label>
+
+                        <input type="text" id="d-res-import-cost" readonly
                             style="background-color: transparent; border: none; font-size: 1.4rem; font-weight: 800; color: #0f172a; padding: 0; height: auto !important; width: 100%;">
-                        
-                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">(Duty + Storage + Service Base)</div>
+
+                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">(Duty + Storage + Service Base)
+                        </div>
                     </div>
 
-                    <div style="background-color: #eff6ff; padding: 12px 15px; border-radius: 8px; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
-                        <label style="font-size: 0.8rem; color: #3b82f6; margin-bottom: 2px; display: block;">COST PER PIECE</label>
-                        
-                        <input type="text" id="d-res-cost-per-piece" readonly 
+                    <div
+                        style="background-color: #eff6ff; padding: 12px 15px; border-radius: 8px; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+                        <label style="font-size: 0.8rem; color: #3b82f6; margin-bottom: 2px; display: block;">COST PER
+                            PIECE</label>
+
+                        <input type="text" id="d-res-cost-per-piece" readonly
                             style="background-color: transparent; border: none; font-size: 1.4rem; font-weight: 800; color: #2563eb; padding: 0; height: auto !important; width: 100%;">
-                        
-                        <div style="height: 14px;"></div> 
+
+                        <div style="height: 14px;"></div>
                     </div>
 
                 </div>
 
                 <div class="form-group" style="margin-top: 25px; display: flex; gap: 10px;">
-                    <button type="button" onclick="calculateDutyPage()"
-                        style="background-color: #0f172a; color: white; flex: 1; padding: 12px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">
-                        Calculate
-                    </button>
                     <button type="button" onclick="clearDutyForm()"
                         style="background-color: #ef4444; color: white; flex: 1; padding: 12px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">
                         Clear Data
