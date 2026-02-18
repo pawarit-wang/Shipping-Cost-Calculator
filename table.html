@@ -80,7 +80,7 @@
                     <li><a href="#" id="lang-cn"><img src="https://flagcdn.com/w40/cn.png" class="flag-img"> CN</a></li>
                 </ul>
             </li>
-            
+
             <li id="nav-logout" class="hidden">
                 <a href="#" id="btn-logout" style="color: #ef4444; font-weight: bold;">Logout</a>
             </li>
@@ -98,6 +98,8 @@
                     <option value="air">Air (DHL, FedEx, UPS, SF)</option>
                     <option value="sea">Sea (V 01-199)</option>
                     <option value="land">Land (V 01-198)</option>
+                    <option value="duty">Country Duty Rates (%)</option>
+                </select>
                 </select>
             </div>
         </div>
@@ -157,6 +159,21 @@
                     <tbody id="tbody-v01198"></tbody>
                 </table>
                 <button class="btn-add" onclick="addNewRow('land')" data-i18n="btn_add_row">+ Add Row</button>
+            </div>
+
+            <div id="view-duty" class="hidden">
+                <h3 style="margin-bottom:10px; color: #6366f1;">Country Duty Rates (%)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Country Key (Matching Dropdown)</th>
+                            <th>Duty Rate (%)</th>
+                            <th style="width: 100px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-duty"></tbody>
+                </table>
+                <button class="btn-add" onclick="addNewRow('duty')">+ Add Country Rate</button>
             </div>
 
         </div>

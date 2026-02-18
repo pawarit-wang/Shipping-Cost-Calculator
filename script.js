@@ -99,7 +99,7 @@ const tablePlaceholder = document.getElementById("table-placeholder");
 const viewAir = document.getElementById("view-air");
 const viewSea = document.getElementById("view-sea");
 const viewLand = document.getElementById("view-land");
-
+const viewDuty = document.getElementById("view-duty");
 
 // =============================
 // Translations Data
@@ -673,6 +673,7 @@ function getInitialRates() {
     rates['ups'] = {}; rates['fedex'] = {};
     rates['v01199'] = { "1.0": 700, "other": 1000 };
     rates['v01198'] = { "0 - 10.0": 13, "10.1 - 45.0": 12, "45.1 - 100.0": 11, "100.1 - 300.0": 10, ">300": 9, "special": 18 };
+    rates['duty_rates'] = { "china": 10, "usa": 20, "japan": 5, "germany": 10, "thailand": 0 };
     return rates;
 }
 
@@ -682,7 +683,8 @@ function getInitialRowConfig() {
     airRows.push("31-44", "45-70", "71-99", "100-299", "> 300");
     const seaRows = ["1.0", "other"];
     const landRows = ["0 - 10.0", "10.1 - 45.0", "45.1 - 100.0", "100.1 - 300.0", ">300", "special"];
-    return { air: airRows, sea: seaRows, land: landRows };
+    const dutyRows = ["china", "usa", "japan", "germany", "thailand"];
+    return { air: airRows, sea: seaRows, land: landRows, duty: dutyRows };
 }
 
 function loadRates() {
@@ -890,6 +892,43 @@ function generateV01198Rows(tbodyId) {
     });
 }
 
+function generateDutyTableRows() {
+    const tbody = document.getElementById("tbody-duty");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    const vendor = "duty_rates";
+    const rates = loadRates();
+    const config = loadRowConfig();
+    const vendorRates = rates[vendor] || {};
+
+    config.duty.forEach((rowKey, index) => {
+        const tr = document.createElement("tr");
+        addDragEvents(tr, 'duty', index);
+
+        const tdKey = document.createElement("td");
+        tdKey.contentEditable = "true";
+        tdKey.textContent = rowKey;
+        tdKey.className = "row-key";
+        tdKey.addEventListener("blur", function () {
+            renameRowKey('duty', rowKey, this.textContent.trim());
+            generateDutyTableRows();
+        });
+
+        const tdPrice = document.createElement("td");
+        tdPrice.contentEditable = "true";
+        tdPrice.textContent = vendorRates[rowKey] || "0";
+        tdPrice.addEventListener("input", function () {
+            saveRate(vendor, rowKey, this.textContent.trim());
+        });
+
+        const tdAction = document.createElement("td");
+        tdAction.appendChild(createActionButtons('duty', index, tr));
+
+        tr.append(tdKey, tdPrice, tdAction);
+        tbody.appendChild(tr);
+    });
+}
+
 function generateV01199Rows(tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
@@ -934,12 +973,14 @@ function refreshTableByType(type) {
     if (type === 'air') generateAirTableRows("tbody-air");
     else if (type === 'sea') generateV01199Rows("tbody-v01199");
     else if (type === 'land') generateV01198Rows("tbody-v01198");
+    else if (type === 'duty') generateDutyTableRows();
 }
 
 function getVendorsByType(type) {
     if (type === 'air') return ['dhl', 'fedex', 'ups', 'sf'];
     if (type === 'sea') return ['v01199'];
     if (type === 'land') return ['v01198'];
+    if (type === 'duty') return ['duty_rates'];
     return [];
 }
 
@@ -1363,7 +1404,11 @@ if (btnCn) btnCn.addEventListener("click", (e) => { e.preventDefault(); setLangu
 
 if (tableVendorSelect) {
     tableVendorSelect.addEventListener("change", function () {
-        [tablePlaceholder, viewAir, viewSea, viewLand].forEach(el => el?.classList.add("hidden"));
+        [tablePlaceholder, viewAir, viewSea, viewLand, viewDuty].forEach(el => el?.classList.add("hidden"));
+        if (this.value === "duty") {
+            viewDuty?.classList.remove("hidden");
+            generateDutyTableRows();
+        }
         if (this.value === "") tablePlaceholder?.classList.remove("hidden");
         else if (this.value === "air") { viewAir?.classList.remove("hidden"); generateAirTableRows("tbody-air"); }
         else if (this.value === "sea") { viewSea?.classList.remove("hidden"); generateV01199Rows("tbody-v01199"); }
@@ -1836,7 +1881,7 @@ window.calculateDutyPage = function () {
     const rate = toNum(document.getElementById('d-rate')?.value);
     const freightBase = toNum(document.getElementById('d-freight-base')?.value);
     const weight = toNum(document.getElementById('d-weight')?.value);
-    const insRate = 10;
+    const insRate = 1;
     const dutyPercent = toNum(document.getElementById('d-duty-rate')?.value);
     const storage = toNum(document.getElementById('d-storage')?.value);
     const serviceBase = toNum(document.getElementById('d-service-base')?.value);
@@ -1878,7 +1923,7 @@ function setVal(id, val) {
 window.clearDutyForm = function () {
     const ids = [
         'd-vendor', 'd-goods-name', 'd-part-number', 'd-hs-code',
-        'd-country', 'd-zone', 'd-pieces',
+        'd-country', 'd-pieces',
         'd-price', 'd-rate', 'd-res-local-price',
         'd-freight-base', 'd-weight', 'd-freight',
         'd-insurance-rate', 'd-insurance',
@@ -1890,7 +1935,7 @@ window.clearDutyForm = function () {
         const el = document.getElementById(id);
         if (el) el.value = "";
     });
-    if (document.getElementById('d-insurance-rate')) document.getElementById('d-insurance-rate').value = "10";
+    if (document.getElementById('d-insurance-rate')) document.getElementById('d-insurance-rate').value = "1";
 };
 
 // Auto Calc Listener
@@ -1910,5 +1955,24 @@ document.addEventListener("DOMContentLoaded", () => {
         // สำหรับช่องที่เป็น Drop-down (Change Event)
         document.getElementById('d-vendor')?.addEventListener('change', window.calculateDutyPage);
         document.getElementById('d-country')?.addEventListener('change', window.calculateDutyPage);
+
+        const dutyCountrySelect = document.getElementById('d-country');
+        if (dutyCountrySelect) {
+            dutyCountrySelect.addEventListener('change', function () {
+                const selectedCountry = this.value;
+                const rates = loadRates(); // ดึงข้อมูลเรททั้งหมดจาก LocalStorage
+                const dutyRates = rates['duty_rates'] || {};
+
+                // ค้นหาค่าภาษีตามประเทศที่เลือก
+                const rate = dutyRates[selectedCountry] !== undefined ? dutyRates[selectedCountry] : "";
+
+                const dutyRateInput = document.getElementById('d-duty-rate');
+                if (dutyRateInput) {
+                    dutyRateInput.value = rate;
+                    // สั่งคำนวณยอดรวมใหม่ทันทีเมื่อค่าเปลี่ยน
+                    window.calculateDutyPage();
+                }
+            });
+        }
     }
 });

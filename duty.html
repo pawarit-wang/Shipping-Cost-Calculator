@@ -103,12 +103,19 @@
                         <input type="text" id="d-part-number" placeholder="P/N">
                     </div>
                     <div>
-                        <label>HS Code</label>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label style="margin-bottom: 0;">HS Code</label>
+                            <a href="https://e-tracking.customs.go.th/ETS/index.jsp" target="_blank"
+                                style="text-decoration: none; font-size: 0.7rem; color: #3b82f6; font-weight: 600; display: flex; align-items: center; gap: 2px;">
+                                🔍 Search
+                            </a>
+                        </div>
                         <input type="text" id="d-hs-code" placeholder="Code">
                     </div>
                 </div>
 
-                <div class="form-group three-col">
+                <div class="form-group two-col">
                     <div>
                         <label>Origin Country</label>
                         <select id="d-country">
@@ -119,10 +126,6 @@
                             <option value="japan">Japan</option>
                             <option value="germany">Germany</option>
                         </select>
-                    </div>
-                    <div>
-                        <label>Zone</label>
-                        <input type="text" id="d-zone" placeholder="Zone">
                     </div>
                     <div>
                         <label>Quantity (Pieces)</label>
@@ -173,7 +176,7 @@
                 <div class="form-group two-col">
                     <div>
                         <label>Insurance Rate (%)</label>
-                        <input type="text" id="d-insurance-rate" value="10" readonly
+                        <input type="text" id="d-insurance-rate" value="1" readonly
                             style="background-color: #f8fafc; cursor: not-allowed;">
                     </div>
                     <div>
