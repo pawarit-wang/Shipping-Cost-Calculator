@@ -43,7 +43,7 @@
 
     <nav class="navbar">
         <div class="nav-left">
-            <span class="nav-logo">🚚 Shipping Cost Calculator</span>
+            <span class="nav-logo" data-i18n="app_title_logo">🚚 Shipping Cost Calculator</span>
         </div>
 
         <button class="hamburger" id="hamburger-btn">☰</button>
@@ -51,7 +51,7 @@
         <ul class="nav-menu">
             <li><a href="table.html" data-i18n="nav_table">Table</a></li>
             <li><a href="index.html" data-i18n="nav_calc">Calculator</a></li>
-            <li><a href="duty.html" class="active">Duty Tax</a></li>
+            <li><a href="duty.html" class="active" data-i18n="nav_duty">Duty Tax</a></li>
             <li><a href="history.html" data-i18n="nav_history">History</a></li>
 
             <li class="lang-dropdown">
@@ -74,18 +74,19 @@
     </nav>
 
     <div class="container container-narrow">
-        <h1>Import Duty Calculator</h1>
+        <h1 data-i18n="header_duty_calc">Import Duty Calculator</h1>
 
         <form id="duty-form">
             <div class="card">
 
-                <h3 style="margin-bottom: 15px; color: #334155;">Shipment Information</h3>
+                <h3 style="margin-bottom: 15px; color: #334155;" data-i18n="subheader_shipment_info">Shipment
+                    Information</h3>
 
                 <div class="form-group four-col">
                     <div>
-                        <label>Forwarder</label>
+                        <label data-i18n="lbl_forwarder">Forwarder</label>
                         <select id="d-vendor">
-                            <option value="">Select</option>
+                            <option value="" data-i18n="opt_select_vendor">Select</option>
                             <option value="dhl">DHL</option>
                             <option value="fedex">FedEx</option>
                             <option value="ups">UPS</option>
@@ -95,62 +96,64 @@
                         </select>
                     </div>
                     <div>
-                        <label>Goods Name</label>
-                        <input type="text" id="d-goods-name" placeholder="Name">
+                        <label data-i18n="lbl_goods_name">Goods Name</label>
+                        <input type="text" id="d-goods-name" placeholder="Name" data-i18n="ph_name">
                     </div>
                     <div>
-                        <label>Part No.</label>
-                        <input type="text" id="d-part-number" placeholder="P/N">
+                        <label data-i18n="lbl_part_no">Part No.</label>
+                        <input type="text" id="d-part-number" placeholder="P/N" data-i18n="ph_pn">
                     </div>
                     <div>
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <label style="margin-bottom: 0;">HS Code</label>
+                            <label style="margin-bottom: 0;" data-i18n="lbl_hs_code">HS Code</label>
                             <a href="https://e-tracking.customs.go.th/ETS/index.jsp" target="_blank"
-                                style="text-decoration: none; font-size: 0.7rem; color: #3b82f6; font-weight: 600; display: flex; align-items: center; gap: 2px;">
+                                style="text-decoration: none; font-size: 0.7rem; color: #3b82f6; font-weight: 600; display: flex; align-items: center; gap: 2px;"
+                                data-i18n="btn_search">
                                 🔍 Search
                             </a>
                         </div>
-                        <input type="text" id="d-hs-code" placeholder="Code">
+                        <input type="text" id="d-hs-code" placeholder="Code" data-i18n="ph_code">
                     </div>
                 </div>
 
                 <div class="form-group two-col">
                     <div>
-                        <label>Origin Country</label>
+                        <label data-i18n="lbl_origin">Origin Country</label>
                         <select id="d-country">
-                            <option value="">Select Country</option>
-                            <option value="china">China</option>
-                            <option value="thailand">Thailand</option>
-                            <option value="usa">USA</option>
-                            <option value="japan">Japan</option>
-                            <option value="germany">Germany</option>
+                            <option value="" data-i18n="opt_select_country">Select Country</option>
+                            <option value="china" data-i18n="country_china">China</option>
+                            <option value="thailand" data-i18n="country_thailand">Thailand</option>
+                            <option value="usa" data-i18n="country_usa">USA</option>
+                            <option value="japan" data-i18n="country_japan">Japan</option>
+                            <option value="germany" data-i18n="country_germany">Germany</option>
                         </select>
                     </div>
                     <div>
-                        <label>Quantity (Pieces)</label>
+                        <label data-i18n="lbl_qty_pieces">Quantity (Pieces)</label>
                         <input type="text" id="d-pieces" inputmode="decimal" placeholder="e.g. 50"
-                            onblur="formatInput(this)">
+                            onblur="formatInput(this)" data-i18n="ph_eg_50">
                     </div>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;">
 
-                <h3 style="margin-bottom: 15px; color: #334155;">Valuation & Tax</h3>
+                <h3 style="margin-bottom: 15px; color: #334155;" data-i18n="subheader_valuation_tax">Valuation & Tax
+                </h3>
 
                 <div class="form-group three-col">
                     <div>
-                        <label>Origin Value</label>
+                        <label data-i18n="lbl_origin_value">Origin Value</label>
                         <input type="text" id="d-price" inputmode="decimal" placeholder="0.00"
                             onblur="formatInput(this)">
                     </div>
                     <div>
-                        <label>Exchange Rate</label>
+                        <label data-i18n="lbl_exchange_rate">Exchange Rate</label>
                         <input type="text" id="d-rate" inputmode="decimal" placeholder="31.5"
                             onblur="formatInput(this)">
                     </div>
                     <div>
-                        <label>Local Value (THB)</label>
+                        <label data-i18n="lbl_local_value">Local Value (THB)</label>
                         <input type="text" id="d-res-local-price" readonly
                             style="background-color: #f8fafc; font-weight: 600;">
                     </div>
@@ -158,29 +161,29 @@
 
                 <div class="form-group three-col">
                     <div>
-                        <label>Freight Rate</label>
+                        <label data-i18n="lbl_freight_rate">Freight Rate</label>
                         <input type="text" id="d-freight-base" inputmode="decimal" placeholder="Rate"
-                            onblur="formatInput(this)">
+                            onblur="formatInput(this)" data-i18n="ph_rate">
                     </div>
                     <div>
-                        <label>Weight (Kg)</label>
-                        <input type="text" id="d-weight" inputmode="decimal" placeholder="Kg"
-                            onblur="formatInput(this)">
+                        <label data-i18n="lbl_weight_kg">Weight (Kg)</label>
+                        <input type="text" id="d-weight" inputmode="decimal" placeholder="Kg" onblur="formatInput(this)"
+                            data-i18n="ph_kg">
                     </div>
                     <div>
-                        <label>Freight Value (THB)</label>
+                        <label data-i18n="lbl_freight_value">Freight Value (THB)</label>
                         <input type="text" id="d-freight" readonly style="background-color: #f8fafc; font-weight: 600;">
                     </div>
                 </div>
 
                 <div class="form-group two-col">
                     <div>
-                        <label>Insurance Rate (%)</label>
+                        <label data-i18n="lbl_insurance_rate">Insurance Rate (%)</label>
                         <input type="text" id="d-insurance-rate" value="1" readonly
                             style="background-color: #f8fafc; cursor: not-allowed;">
                     </div>
                     <div>
-                        <label>Insurance Value (THB)</label>
+                        <label data-i18n="lbl_insurance_value">Insurance Value (THB)</label>
                         <input type="text" id="d-insurance" readonly
                             style="background-color: #f8fafc; font-weight: 600;">
                     </div>
@@ -188,12 +191,12 @@
 
                 <div class="form-group two-col">
                     <div>
-                        <label>Duty Rate (%)</label>
+                        <label data-i18n="lbl_duty_rate">Duty Rate (%)</label>
                         <input type="text" id="d-duty-rate" inputmode="decimal" placeholder="e.g. 10"
-                            onblur="formatInput(this)">
+                            onblur="formatInput(this)" data-i18n="ph_eg_10">
                     </div>
                     <div>
-                        <label style="color: #b45309;">Import Duty Fee</label>
+                        <label style="color: #b45309;" data-i18n="lbl_import_duty_fee">Import Duty Fee</label>
                         <input type="text" id="d-res-duty" readonly
                             style="background-color: #fffbeb; color: #b45309; font-weight: bold;">
                     </div>
@@ -201,12 +204,12 @@
 
                 <div class="form-group two-col">
                     <div>
-                        <label>Storage</label>
+                        <label data-i18n="lbl_storage">Storage</label>
                         <input type="text" id="d-storage" inputmode="decimal" placeholder="0.00"
                             onblur="formatInput(this)">
                     </div>
                     <div>
-                        <label>Service (Base)</label>
+                        <label data-i18n="lbl_service_base">Service (Base)</label>
                         <input type="text" id="d-service-base" inputmode="decimal" placeholder="0.00"
                             onblur="formatInput(this)">
                     </div>
@@ -218,20 +221,21 @@
 
                     <div
                         style="background-color: #f1f5f9; padding: 12px 15px; border-radius: 8px; height: 100%; display: flex; flex-direction: column; justify-content: center;">
-                        <label style="font-size: 0.8rem; color: #64748b; margin-bottom: 2px; display: block;">TOTAL
-                            IMPORT COST</label>
+                        <label style="font-size: 0.8rem; color: #64748b; margin-bottom: 2px; display: block;"
+                            data-i18n="lbl_total_import_cost">TOTAL IMPORT COST</label>
 
                         <input type="text" id="d-res-import-cost" readonly
                             style="background-color: transparent; border: none; font-size: 1.4rem; font-weight: 800; color: #0f172a; padding: 0; height: auto !important; width: 100%;">
 
-                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">(Duty + Storage + Service Base)
+                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;"
+                            data-i18n="lbl_duty_storage_service">(Duty + Storage + Service Base)
                         </div>
                     </div>
 
                     <div
                         style="background-color: #eff6ff; padding: 12px 15px; border-radius: 8px; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
-                        <label style="font-size: 0.8rem; color: #3b82f6; margin-bottom: 2px; display: block;">COST PER
-                            PIECE</label>
+                        <label style="font-size: 0.8rem; color: #3b82f6; margin-bottom: 2px; display: block;"
+                            data-i18n="lbl_cost_per_piece">COST PER PIECE</label>
 
                         <input type="text" id="d-res-cost-per-piece" readonly
                             style="background-color: transparent; border: none; font-size: 1.4rem; font-weight: 800; color: #2563eb; padding: 0; height: auto !important; width: 100%;">
@@ -243,7 +247,8 @@
 
                 <div class="form-group" style="margin-top: 25px; display: flex; gap: 10px;">
                     <button type="button" onclick="clearDutyForm()"
-                        style="background-color: #ef4444; color: white; flex: 1; padding: 12px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">
+                        style="background-color: #ef4444; color: white; flex: 1; padding: 12px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;"
+                        data-i18n="btn_clear">
                         Clear Data
                     </button>
                 </div>
@@ -251,6 +256,14 @@
             </div>
         </form>
     </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-info">
+                <p>&copy; 2026 Shipping Cost Calculator. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 
     <script type="module" src="auth.js"></script>
     <script type="module" src="script.js"></script>

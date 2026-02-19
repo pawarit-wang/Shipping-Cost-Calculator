@@ -13,10 +13,6 @@
             font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
         }
 
-        .container {
-            max-width: 96%;
-        }
-
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -150,7 +146,7 @@
         <ul class="nav-menu">
             <li><a href="table.html" data-i18n="nav_table">Table</a></li>
             <li><a href="index.html" data-i18n="nav_calc">Calculator</a></li>
-            <li><a href="duty.html">Duty Tax</a></li>
+            <li><a href="duty.html" class="active" data-i18n="nav_duty">Duty Tax</a></li>
             <li><a href="history.html" data-i18n="nav_history">History</a></li>
 
             <li class="lang-dropdown">
@@ -218,6 +214,14 @@
             <div id="pagination-controls" class="pagination"></div>
         </div>
     </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-info">
+                <p>&copy; 2026 Shipping Cost Calculator. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
